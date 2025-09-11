@@ -1,0 +1,21 @@
+services:
+  # Servicio para el backend de Node.js
+  backend:
+    build:
+      context: ./backend # Ruta a la carpeta de tu backend
+      dockerfile: Dockerfile
+    container_name: backend-service
+    restart: always
+    ports:
+      - "3000:3000" # Mapea el puerto 3000 de tu máquina al puerto del contenedor
+    environment:
+      # Variables de entorno para la conexión a las bases de datos
+      - DATABASE_URL=
+      - MONGODB_URI=
+    depends_on:
+      - db-postgres # Asegura que PostgreSQL se inicie primero
+      - db-mongodb # Asegura que MongoDB se inicie primero
+    networks:
+      - app-network
+
+# ... (El resto del docker-compose.yml con los otros servicios) ...
