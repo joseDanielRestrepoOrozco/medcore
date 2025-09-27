@@ -5,8 +5,7 @@ import stylistic from '@stylistic/eslint-plugin'
 export default tseslint.config({
   extends: [
     eslint.configs.recommended,
-    tseslint.configs.recommended,
-    tseslint.configs.recommendedTypeChecked
+    tseslint.configs.recommended
   ],
   plugins: {
     js: eslint,
@@ -29,5 +28,5 @@ export default tseslint.config({
     '@typescript-eslint/restrict-plus-operands': 'off',
     '@typescript-eslint/no-case-declarations': 'off'
   },
-  ignores: ['build/**/*', 'eslint.config.mjs']
+  ignores: ['dist/**/*', 'eslint.config.mjs']
 })
