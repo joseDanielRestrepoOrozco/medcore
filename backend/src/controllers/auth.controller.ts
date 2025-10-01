@@ -1,11 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import emailConfig from '../config/emailConfig';
 import { NextFunction, Request, Response } from 'express';
 import { signupSchema, loginSchema, verifyEmailSchema, resendVerificationCodeSchema } from '../schemas/Auth';
 import { SECRET } from '../libs/config';
+
+const prisma = new PrismaClient();
 
 const signup = async (
   req: Request,
@@ -20,7 +21,6 @@ const signup = async (
     });
 
     if (userExist) {
-      console.log('User already exists');
       res.status(400).json({ error: 'User already exists' });
       return;
     }
@@ -37,6 +37,7 @@ const signup = async (
         email: newUser.email,
         currentPassword: await bcrypt.hash(newUser.currentPassword, 10),
         fullname: newUser.fullname,
+        role: newUser.role || 'PACIENTE',
         verificationCode,
         verificationCodeExpires,
       },
@@ -75,10 +76,8 @@ const login = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Validar datos con Zod
     const loginData = loginSchema.parse(req.body);
 
-    // Buscar usuario por email
     const user = await prisma.users.findUnique({
       where: { email: loginData.email },
     });
@@ -88,13 +87,11 @@ const login = async (
       return;
     }
 
-    // Verificar si el usuario está verificado
     if (user.status !== 'VERIFIED') {
       res.status(401).json({ error: 'Email no verificado. Revisa tu correo.' });
       return;
     }
 
-    // Verificar contraseña
     const passwordMatch = await bcrypt.compare(
       loginData.currentPassword,
       user.currentPassword
@@ -105,7 +102,6 @@ const login = async (
       return;
     }
 
-    // Generar token JWT
     if (!SECRET) {
       res.status(500).json({ error: 'Error de configuración del servidor' });
       return;
@@ -142,10 +138,8 @@ const verifyEmail = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Validar datos con Zod
     const verifyData = verifyEmailSchema.parse(req.body);
 
-    // Buscar usuario por email
     const user = await prisma.users.findUnique({
       where: { email: verifyData.email },
     });
@@ -155,25 +149,21 @@ const verifyEmail = async (
       return;
     }
 
-    // Verificar si ya está verificado
     if (user.status === 'VERIFIED') {
       res.status(400).json({ error: 'Usuario ya verificado' });
       return;
     }
 
-    // Verificar código
     if (user.verificationCode !== verifyData.verificationCode) {
       res.status(400).json({ error: 'Código de verificación inválido' });
       return;
     }
 
-    // Verificar si el código no ha expirado
     if (user.verificationCodeExpires && user.verificationCodeExpires < new Date()) {
       res.status(400).json({ error: 'Código de verificación expirado' });
       return;
     }
 
-    // Actualizar usuario a verificado
     const updatedUser = await prisma.users.update({
       where: { id: user.id },
       data: {
@@ -203,10 +193,8 @@ const resendVerificationCode = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Validar datos con Zod
     const resendData = resendVerificationCodeSchema.parse(req.body);
 
-    // Buscar usuario por email
     const user = await prisma.users.findUnique({
       where: { email: resendData.email },
     });
@@ -216,20 +204,17 @@ const resendVerificationCode = async (
       return;
     }
 
-    // Verificar si ya está verificado
     if (user.status === 'VERIFIED') {
       res.status(400).json({ error: 'Usuario ya verificado' });
       return;
     }
 
-    // Generar nuevo código de verificación
     const verificationCode = emailConfig.generateVerificationCode();
     const verificationCodeExpires = new Date();
     verificationCodeExpires.setMinutes(
       verificationCodeExpires.getMinutes() + 15
     );
 
-    // Actualizar usuario con nuevo código
     await prisma.users.update({
       where: { id: user.id },
       data: {
@@ -238,7 +223,6 @@ const resendVerificationCode = async (
       },
     });
 
-    // Enviar email con nuevo código
     const emailResult = await emailConfig.sendVerificationEmail(
       user.email,
       user.fullname,
