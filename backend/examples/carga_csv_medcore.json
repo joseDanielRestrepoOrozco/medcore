@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "email": "doctor1@medcore.com",
+      "fullname": "Dr. Ana María González",
+      "role": "MEDICO",
+      "currentPassword": "TempPass123!",
+      "specialization": "CARDIOLOGIA",
+      "department": "MEDICINA_INTERNA",
+      "licenseNumber": "12345-MD",
+      "phone": "+57-300-1234567",
+      "dateOfBirth": "1985-03-15"
+    },
+    {
+      "email": "nurse1@medcore.com",
+      "fullname": "María Elena Rodríguez",
+      "role": "ENFERMERA",
+      "currentPassword": "TempPass123!",
+      "department": "URGENCIAS",
+      "phone": "+57-300-2345678",
+      "dateOfBirth": "1990-07-22"
+    },
+    {
+      "email": "admin1@medcore.com",
+      "fullname": "Carlos Alberto Méndez",
+      "role": "ADMINISTRADOR",
+      "currentPassword": "TempPass123!",
+      "department": "ADMINISTRACION",
+      "phone": "+57-300-3456789",
+      "dateOfBirth": "1980-11-08"
+    },
+    {
+      "email": "patient1@medcore.com",
+      "fullname": "Luis Fernando Castro",
+      "role": "PACIENTE",
+      "currentPassword": "TempPass123!",
+      "dateOfBirth": "1995-09-12"
+    }
+  ]
+}

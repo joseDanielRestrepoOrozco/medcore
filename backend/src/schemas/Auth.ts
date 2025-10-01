@@ -9,9 +9,10 @@ const currentPassword = z
   });
 
 export const signupSchema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   currentPassword,
   fullname: z.string().min(1),
+  role: z.enum(['MEDICO', 'ENFERMERA', 'PACIENTE', 'ADMINISTRADOR']).optional().default('ADMINISTRADOR'),
 });
 
 export const loginSchema = z.object({
