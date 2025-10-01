@@ -52,11 +52,18 @@ const signup = async (
       await prisma.users.delete({
         where: { id: createUser.id },
       });
-      res.status(500).json({ message: 'Error sending verification email' });
+      res.status(500).json({ error: 'Error sending verification email' });
       return;
     }
 
-    res.status(201).json(createUser);
+    // Sanitize response (no password or codes)
+    res.status(201).json({
+      id: createUser.id,
+      email: createUser.email,
+      fullname: createUser.fullname,
+      status: createUser.status,
+      message: 'Usuario creado. Código enviado al correo.'
+    });
   } catch (error: unknown) {
     next(error);
   }

@@ -1,3 +1,37 @@
+Frontend mínimo para autenticación contra el backend de MedCore
+
+Pasos rápidos:
+
+1. Instalar dependencias
+
+```bash
+cd frontend
+npm install
+```
+
+2. (Opcional) instalar tipos para TypeScript
+
+```bash
+npm install -D @types/react @types/react-dom @types/react-router-dom
+```
+
+3. Iniciar en modo desarrollo
+
+```bash
+npm run dev
+```
+
+4. Configurar la URL del backend
+
+Edita `.env` si tu backend corre en otro puerto o host. Por defecto está:
+
+```
+VITE_API_BASE=http://localhost:3000/api/v1
+```
+
+Descripción breve:
+- Rutas: `/signup`, `/verify`, `/login`.
+- El token JWT se guarda en `localStorage` tras el login.
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

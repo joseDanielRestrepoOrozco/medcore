@@ -1,1 +1,19 @@
+/* 1. Importa Tailwind (v4) */
 @import "tailwindcss";
+
+/* 2. Tus estilos personalizados usando @layer / @apply (después de las directivas) */
+@layer components {
+  /* ejemplos de clases globales que componen utilidades */
+  .card {
+    @apply bg-white p-6 rounded shadow;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-slate-800 text-white rounded;
+  }
+}
+
+/* 3. (opcional) estilos globales normales */
+html, body {
+  height: 100%;
+}

@@ -1,5 +1,38 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import SignUp from './pages/SignUp';
+import VerifyEmail from './pages/VerifyEmail';
+import Login from './pages/Login';
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import PatientDashboard from './pages/PatientDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import GuestRoute from './components/GuestRoute';
+import Navbar from './components/Navbar';
+
 const App = () => {
-  return <h1>MedCore</h1>;
+  return (
+    <AuthProvider>
+    <BrowserRouter>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+
+    <main className="flex-1 py-8">
+            <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/signup" element={<GuestRoute redirectTo="/dashboard"><SignUp /></GuestRoute>} />
+            <Route path="/verify" element={<GuestRoute redirectTo="/dashboard"><VerifyEmail /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute redirectTo="/dashboard"><Login /></GuestRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/patient" element={<ProtectedRoute><PatientDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+    </AuthProvider>
+  );
 };
 
 export default App;
