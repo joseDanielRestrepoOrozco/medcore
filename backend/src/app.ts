@@ -1,13 +1,10 @@
 import express from 'express';
 
-import connectDB from './database/setup';
 import router from './routes/routes';
 import unknownEndpoint from './middlewares/unknownEndpoint';
 import errorHandler from './middlewares/errorHandler';
 
 const app = express();
-
-connectDB();
 
 app.use(express.json());
 app.use('/api/v1', router);

@@ -1,8 +1,9 @@
 import { describe, test, beforeEach, afterAll, expect } from 'vitest';
 import supertest from 'supertest';
 import app from '../src/app';
-import mongoose from 'mongoose';
 import { MailSlurp } from 'mailslurp-client';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 const api = supertest(app);
 
@@ -19,15 +20,14 @@ describe('email service', () => {
   });
 });
 
-describe.only('Registration', async () => {
+describe('Registration', async () => {
   const inbox = await mailSlurp.inboxController.createInboxWithDefaults();
 
   beforeEach(async () => {
     // Clear the users collection before each test
-    await mongoose.connection.collection('users').deleteMany({});
+    await prisma.users.deleteMany({});
   });
-  
-  
+
   test('User Registration - Successful Registration', async () => {
     const userData = {
       email: inbox.emailAddress,
@@ -36,11 +36,11 @@ describe.only('Registration', async () => {
     };
 
     const response = await api
-    .post('/api/v1/auth/sign-up')
-    .send(userData)
-    .expect(201)
-    .expect('Content-Type', /application\/json/);
-    
+      .post('/api/v1/auth/sign-up')
+      .send(userData)
+      .expect(201)
+      .expect('Content-Type', /application\/json/);
+
     // Verify user was created with verification code for email sending
     expect(response.body.email).toBe(userData.email);
     expect(response.body.fullname).toBe(userData.fullname);
@@ -52,6 +52,6 @@ describe.only('Registration', async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  await prisma.$disconnect();
   await mailSlurp.inboxController.deleteAllInboxes();
 });
