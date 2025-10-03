@@ -1,0 +1,8 @@
+email,fullname,currentPassword,role
+juan.perez@hospital.com,Dr. Juan Pérez,medico123,MEDICO
+maria.garcia@hospital.com,Enf. María García,enferm123,ENFERMERO
+carlos.lopez@hospital.com,Dr. Carlos López,cardio123,MEDICO
+ana.martinez@hospital.com,Enf. Ana Martínez,ana123,ENFERMERO
+luis.rodriguez@paciente.com,Luis Rodríguez,paciente123,PACIENTE
+sofia.torres@paciente.com,Sofía Torres,sofia123,PACIENTE
+admin@hospital.com,Administrador Sistema,admin123,ADMINISTRADOR

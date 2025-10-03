@@ -18,7 +18,13 @@ model Users {
   email                   String    @unique
   fullname                String
   currentPassword         String
+  role                    String    @default("ADMINISTRADOR") // MEDICO, ENFERMERA, PACIENTE, ADMINISTRADOR
   status                  String    @default("PENDING")
+  specialization          String? // Especialización médica (solo para médicos)
+  department              String? // Departamento donde trabaja
+  licenseNumber           String? // Número de licencia médica
+  phone                   String? // Teléfono de contacto
+  dateOfBirth             DateTime? // Fecha de nacimiento
   verificationCode        String?
   verificationCodeExpires DateTime?
   createdAt               DateTime  @default(now())
