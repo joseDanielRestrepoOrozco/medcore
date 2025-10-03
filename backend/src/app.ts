@@ -1,5 +1,5 @@
 import express from 'express';
-
+import './types/express';
 import router from './routes/routes';
 import unknownEndpoint from './middlewares/unknownEndpoint';
 import errorHandler from './middlewares/errorHandler';

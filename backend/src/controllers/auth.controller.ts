@@ -3,7 +3,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import emailConfig from '../config/emailConfig';
 import { NextFunction, Request, Response } from 'express';
-import { signupSchema, loginSchema, verifyEmailSchema, resendVerificationCodeSchema } from '../schemas/Auth';
+import {
+  signupSchema,
+  loginSchema,
+  verifyEmailSchema,
+  resendVerificationCodeSchema,
+} from '../schemas/Auth';
 import { SECRET } from '../libs/config';
 
 const prisma = new PrismaClient();
@@ -152,7 +157,10 @@ const verifyEmail = async (
       return;
     }
 
-    if (user.verificationCodeExpires && user.verificationCodeExpires < new Date()) {
+    if (
+      user.verificationCodeExpires &&
+      user.verificationCodeExpires < new Date()
+    ) {
       res.status(400).json({ error: 'Código de verificación expirado' });
       return;
     }
