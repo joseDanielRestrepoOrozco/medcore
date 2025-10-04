@@ -24,6 +24,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use('/api/v1', router);
 
 app.use(unknownEndpoint);

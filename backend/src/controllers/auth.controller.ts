@@ -129,6 +129,7 @@ const login = async (
         email: user.email,
         fullname: user.fullname,
         status: user.status,
+        role: user.role,
       },
       token,
     });
