@@ -49,10 +49,6 @@ const SignUp = () => {
     }
   });
 
-  if (errors.fullname || errors.email || errors.currentPassword) {
-    console.log('There are validation errors:', errors);
-  }
-
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
