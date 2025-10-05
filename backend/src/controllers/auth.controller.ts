@@ -46,7 +46,6 @@ const signup = async (
         email: newUser.email,
         currentPassword: await bcrypt.hash(newUser.currentPassword, 10),
         fullname: newUser.fullname,
-        role: newUser.role || 'PACIENTE',
         verificationCode,
         verificationCodeExpires,
       },
@@ -98,6 +97,7 @@ const login = async (
         email: true,
         fullname: true,
         status: true,
+        role: true,
         currentPassword: true,
       },
     });

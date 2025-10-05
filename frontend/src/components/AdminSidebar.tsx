@@ -40,9 +40,10 @@ const IconSettings = (
 
 const AdminSidebar: React.FC<{ active?: string }> = ({ active = 'usuarios' }) => {
   const items: Item[] = [
-    { key: 'usuarios', label: 'Gestionar Usuarios', icon: IconUsers },
+    { key: 'panel', label: 'Panel de Control', icon: IconReports },
+    { key: 'usuarios', label: 'Usuarios', icon: IconUsers },
     { key: 'pacientes', label: 'Pacientes', icon: IconPatients },
-    { key: 'financieros', label: 'Financieros', icon: IconFinance },
+    { key: 'carga', label: 'Carga Masiva', icon: IconFinance },
     { key: 'reportes', label: 'Reportes', icon: IconReports },
     { key: 'ajustes', label: 'Ajustes', icon: IconSettings },
   ];
@@ -73,4 +74,3 @@ const AdminSidebar: React.FC<{ active?: string }> = ({ active = 'usuarios' }) =>
 };
 
 export default AdminSidebar;
-

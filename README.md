@@ -2,6 +2,23 @@
 
 Estado actual y guía rápida para el equipo.
 
+## Setup Rápido (Post‑Clone)
+- Requisitos: Node 18+ (recomendado), npm 9+.
+- Clonar y entrar al repo: `git clone <url> && cd medcore`
+- Backend:
+  - `cd backend`
+  - `npm install`
+  - Crear `backend/.env` con las variables listadas abajo (ver sección Backend > Variables de entorno). En desarrollo puedes usar `EMAIL_ENABLED=false`.
+  - Generar Prisma Client: `npx prisma generate`
+  - Sincronizar esquema (MongoDB): `npx prisma db push`
+  - Ejecutar: `npm run dev`
+- Frontend:
+  - En otra terminal: `cd frontend`
+  - `npm install`
+  - Si tu rama usa validación con formularios: `npm i react-hook-form zod @hookform/resolvers`
+  - (Opcional) Crear `frontend/.env` con `VITE_API_BASE=http://localhost:3000/api/v1`
+  - Ejecutar: `npm run dev`
+
 ## Stack
 - Frontend: React + TypeScript + Vite + Tailwind CSS
 - Backend: Node.js + Express + TypeScript + Prisma + JWT + Nodemailer

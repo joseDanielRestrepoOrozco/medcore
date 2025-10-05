@@ -14,6 +14,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GuestRoute from './components/GuestRoute';
 import RoleRoute from './components/RoleRoute';
+import RoleRedirect from './components/RoleRedirect';
 import Navbar from './components/Navbar';
 
 const App = () => {
@@ -30,12 +31,12 @@ const App = () => {
             <Route path="/solicitar-registro" element={<GuestRoute redirectTo="/dashboard"><SolicitarRegistro /></GuestRoute>} />
             <Route path="/verify" element={<GuestRoute redirectTo="/dashboard"><VerifyEmail /></GuestRoute>} />
             <Route path="/login" element={<GuestRoute redirectTo="/dashboard"><Login /></GuestRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/patient" element={<RoleRoute allowed={['patient']}><PatientDashboard /></RoleRoute>} />
-            <Route path="/admin" element={<RoleRoute allowed={['admin']}><AdminDashboard /></RoleRoute>} />
-            <Route path="/medico" element={<RoleRoute allowed={['medico']}><MedicoDashboard /></RoleRoute>} />
+            <Route path="/patient" element={<RoleRoute allowed={['PACIENTE','patient']}><PatientDashboard /></RoleRoute>} />
+            <Route path="/admin" element={<RoleRoute allowed={['ADMINISTRADOR','admin']}><AdminDashboard /></RoleRoute>} />
+            <Route path="/medico" element={<RoleRoute allowed={['MEDICO','medico']}><MedicoDashboard /></RoleRoute>} />
           </Routes>
         </main>
       </div>

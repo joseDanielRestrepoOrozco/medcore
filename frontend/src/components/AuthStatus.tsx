@@ -22,16 +22,17 @@ const AuthStatus = () => {
 
   const displayName = user?.fullname || user?.email || 'Usuario';
 
-  const role = (user as typeof user & { role?: 'admin' | 'patient' | 'medico' })?.role;
-  const dashboardHref = role === 'admin' ? '/admin' : role === 'patient' ? '/patient' : role === 'medico' ? '/medico' : '/dashboard';
+  const rawRole = (user as typeof user & { role?: string })?.role || '';
+  const role = rawRole.toUpperCase();
+  const dashboardHref =
+    role === 'ADMINISTRADOR' ? '/admin' : role === 'PACIENTE' ? '/patient' : role === 'MEDICO' ? '/medico' : '/dashboard';
 
   return (
     <div className="flex items-center space-x-4">
       {/* Nombre visible */}
       <span className="text-sm text-slate-900">{displayName}</span>
 
-      {/* Botón tipo píldora hacia el panel */}
-      <Link to={dashboardHref} className="px-4 py-2 rounded-full text-sm font-medium bg-slate-800 text-white shadow-md border-2 border-slate-800 hover:bg-slate-900">Dashboard</Link>
+      {/* Quitar botón 'Dashboard': se redirige automáticamente por rol */}
       <Link to="/profile" className="px-4 py-2 rounded-full text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50">Perfil</Link>
       <Link to="/settings" className="px-4 py-2 rounded-full text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50">Configuración</Link>
 

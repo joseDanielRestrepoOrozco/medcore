@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signUp } from '../services/auth';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../utils/error';
@@ -7,15 +7,17 @@ import { useForm } from 'react-hook-form';
 import InputField from '../components/InputField';
 import { z } from 'zod';
 
-const loginSchema = z.object({
-  email: z.email({ error: 'Correo inválido' }),
+// Validaciones alineadas con el backend (zod en backend limita a max 6 y requiere un número)
+const signUpSchema = z.object({
+  fullname: z.string().min(1, { message: 'El nombre es obligatorio' }),
+  email: z.string().email({ message: 'Correo inválido' }),
   currentPassword: z
     .string()
-    .min(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-    .refine(val => /\d/.test(val), {
-      message: 'La contraseña debe contener al menos un número',
+    .min(1, { message: 'La contraseña es obligatoria' })
+    .max(6, { message: 'Máximo 6 caracteres' })
+    .refine((val) => /\d/.test(val), {
+      message: 'Debe contener al menos un número',
     }),
-  fullname: z.string().min(1, { message: 'El nombre es obligatorio' }),
 });
 
 const SignUp = () => {
@@ -23,31 +25,65 @@ const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Bloquear acceso directo si no pasó por "Solicitar registro"
+  useEffect(() => {
+    const allowed = sessionStorage.getItem('signup_access') === 'granted';
+    if (!allowed) navigate('/solicitar-registro', { replace: true });
+  }, [navigate]);
+
   const form = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       email: '',
       currentPassword: '',
       fullname: '',
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
 
-  const errors = form.formState.errors;
+  const errors = form.formState.errors as {
+    fullname?: { message?: string };
+    email?: { message?: string };
+    currentPassword?: { message?: string };
+  };
 
-  const onSubmit = form.handleSubmit(async data => {
+  const onSubmit = form.handleSubmit(async (data) => {
     setLoading(true);
     setError(null);
     try {
-      await signUp(data);
+      // La creación de cuenta es para Administradores. El backend asigna rol por defecto
+      // o puede aceptarlo en el payload si está soportado.
+      await signUp({ ...data, role: 'ADMINISTRADOR' } as any);
       navigate('/verify', { state: { email: data.email } });
+      form.reset();
+      sessionStorage.removeItem('signup_access');
     } catch (err: unknown) {
-      setError(getErrorMessage(err));
+      // Si el backend devolvió detalles de validación por campo, pintarlos abajo de cada input
+      const ax = err as {
+        response?: { status?: number; data?: { error?: unknown; details?: Record<string, string[]> } };
+      };
+      const status = ax?.response?.status;
+      const details = ax?.response?.data?.details;
+      if (status === 400 && details && typeof details === 'object') {
+        Object.entries(details).forEach(([field, messages]) => {
+          const msg = Array.isArray(messages) ? messages[0] : String(messages);
+          if (['fullname', 'email', 'currentPassword'].includes(field)) {
+            form.setError(field as 'fullname' | 'email' | 'currentPassword', {
+              type: 'server',
+              message: msg,
+            });
+          }
+        });
+        setError('Revisa los campos marcados.');
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
       setLoading(false);
-      form.reset();
     }
   });
+
+  const [showPass, setShowPass] = useState(false);
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-11rem)] bg-gray-50">
@@ -62,39 +98,49 @@ const SignUp = () => {
           </div>
         )}
 
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} noValidate>
           <InputField
             label="Nombre completo"
             name="fullname"
             placeholder="Nombre completo"
             register={form.register}
+            error={errors.fullname?.message}
           />
-          {errors.fullname && (
-            <span className="text-red-600 text-sm mt-1">
-              {errors.fullname.message}
-            </span>
-          )}
           <InputField
             label="Correo electrónico"
             name="email"
             placeholder="Correo"
             type="email"
             register={form.register}
+            error={errors.email?.message}
           />
-          {errors.email && (
-            <span className="text-red-600 text-sm mt-1">
-              {errors.email.message}
-            </span>
-          )}
-          <InputField
-            label="Contraseña"
-            name="currentPassword"
-            type="password"
-            placeholder="Contraseña"
-            register={form.register}
-          />
-          {errors.currentPassword && (
-            <span className="text-red-600 text-sm mt-1">
+          <label className="block mt-4">
+            Contraseña
+            <div className="relative">
+              <input
+                {...form.register('currentPassword')}
+                type={showPass ? 'text' : 'password'}
+                placeholder="Contraseña"
+                className={
+                  'w-full px-4 py-3 pr-20 rounded-lg outline-none transition placeholder:text-left ' +
+                  (errors.currentPassword?.message
+                    ? 'border border-red-500 focus:border-red-600 focus:ring-2 focus:ring-red-300 '
+                    : 'border border-slate-300 focus:border-slate-800 focus:ring-2 focus:ring-slate-400 ')
+                }
+                aria-invalid={Boolean(errors.currentPassword) || undefined}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass((v) => !v)}
+                className="absolute inset-y-0 right-0 px-3 text-sm text-slate-600 hover:text-slate-800"
+                aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPass ? 'Ocultar' : 'Mostrar'}
+              </button>
+            </div>
+          </label>
+          {errors.currentPassword?.message && (
+            <span className="block text-red-600 text-sm mt-1">
               {errors.currentPassword.message}
             </span>
           )}
