@@ -12,6 +12,9 @@ export type AuthUser = {
   email: string;
   fullname: string;
   status: string;
+  // roles según backend (ES):
+  // 'ADMINISTRADOR' | 'MEDICO' | 'PACIENTE' | 'ENFERMERA'
+  role?: string;
 };
 
 export type SignUpResponse = {

@@ -5,6 +5,7 @@ type User = {
   email?: string;
   fullname?: string;
   status?: string;
+  role?: 'admin' | 'patient' | 'medico';
 };
 
 type AuthContextValue = {
@@ -43,8 +44,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    try {
+      // Requisito: eliminar datos de navegación en Application/Local storage
+      localStorage.clear();
+    } catch (_) {
+      // ignore
+    }
     setToken(null);
     setUser(null);
+    // Requisito: redireccionar a la landing page
+    if (typeof window !== 'undefined') {
+      window.location.assign('/');
+    }
   };
 
   return (

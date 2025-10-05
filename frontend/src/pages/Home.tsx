@@ -60,11 +60,12 @@ const Home: React.FC = () => {
                 >
                   Ver Funcionalidades
                 </a>
+                {/* Requisito: no habilitar registro en landing. Mostrar acceso a login. */}
                 <a
-                  href="/signup"
+                  href="/login"
                   className="inline-block px-6 py-3 rounded-lg border border-slate-300 text-white/90 bg-white/5 backdrop-blur-sm"
                 >
-                  Crear Cuenta
+                  Iniciar sesión
                 </a>
               </div>
             </div>

@@ -1,11 +1,5 @@
 import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
-import {
-  NODE_ENV,
-  SMTP_HOST,
-  SMTP_PASS,
-  SMTP_PORT,
-  SMTP_USER,
-} from '../libs/config';
+import { SMTP_PASS, SMTP_USER, SMTP_HOST, SMTP_PORT, SMTP_SECURE, EMAIL_ENABLED } from '../libs/config';
 
 interface MailResult {
   success: boolean;
@@ -13,17 +7,31 @@ interface MailResult {
   error?: string;
 }
 
-const transporter: Transporter = nodemailer.createTransport({
-  service: NODE_ENV === 'production' ? 'gmail' : undefined,
+// Normalize password (Gmail App Passwords must not contain spaces)
+const normalizedPass = (SMTP_PASS || '').replace(/\s+/g, '');
 
-  host: SMTP_HOST,
-  port: SMTP_PORT,
+// Prefer explicit host/port if provided; fallback to Gmail service
+const transporter: Transporter = nodemailer.createTransport(
+  SMTP_HOST
+    ? {
+        host: SMTP_HOST,
+        port: SMTP_PORT ? Number(SMTP_PORT) : 587,
+        secure: String(SMTP_SECURE).toLowerCase() === 'true',
+        auth: {
+          user: SMTP_USER,
+          pass: normalizedPass,
+        },
+      }
+    : {
+        service: 'gmail',
+        auth: {
+          user: SMTP_USER,
+          pass: normalizedPass,
+        },
+      }
+);
 
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+let transporterVerified = false;
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -35,31 +43,71 @@ const sendVerificationEmail = async (
   fullname: string,
   verificationCode: string
 ): Promise<MailResult> => {
+  console.log('[emailConfig] EMAIL_ENABLED=', String(EMAIL_ENABLED));
+  console.log('[emailConfig] transport mode=', SMTP_HOST ? `host=${SMTP_HOST} port=${SMTP_PORT} secure=${SMTP_SECURE}` : 'gmail service');
+  console.log('[emailConfig] SMTP_USER set=', Boolean(SMTP_USER));
+  if (String(EMAIL_ENABLED).toLowerCase() === 'false') {
+    console.warn('[emailConfig] EMAIL_ENABLED=false — omitiendo envío de correo.');
+    console.log(`[DEV] Código de verificación para ${email}: ${verificationCode}`);
+    return { success: true };
+  }
+
+  try {
+    if (!transporterVerified) {
+      await transporter.verify();
+      transporterVerified = true;
+      console.log('[emailConfig] transporter verified');
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[emailConfig] transporter verification failed:', msg);
+    return { success: false, error: msg };
+  }
+
   const mailOptions: SendMailOptions = {
     from: SMTP_USER,
     to: email,
-    subject: 'Verificación de Cuenta - Confirma tu email',
+    subject: 'MedCore | Verifica tu correo para activar tu cuenta',
     html: `
-    <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-        <h1 style="color: white; margin: 0;">¡Bienvenido/a!</h1> 
-      </div>
-      <div style="padding: 30px; background-color: #f9f9f9;">
-        <h2 style="color: #333;">Hola ${fullname}</h2>
-        <p style="color: #666; line-height: 1.6;">
-          Gracias por registrarte en nuestra plataforma. Para completar tu registro, necesitas verificar tu dirección de correo electrónico:
-        </p>
-        <div style="text-align: center; margin: 30px 0;">
-          <div style="background-color: #667eea; color: white; font-size: 32px; font-weight: bold; padding: 15px 30px; border-radius: 8px; display: inline-block; letter-spacing: 3px;">
-            ${verificationCode}
-          </div>
-        </div>
-        <p style="color: #666; line-height: 1.6;">
-          Introduce este código en la aplicación para activar tu cuenta.
-          <br>
-          <strong>Este código es válido solo por 15 minutos.</strong>
-        </p>
-      </div>
+    <div style="max-width:640px;margin:0 auto;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#f6f9fc;color:#0f172a">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr>
+          <td style="padding:24px 24px 0 24px; text-align:center">
+            <div style="display:inline-flex;align-items:center;gap:10px">
+              <div style="width:40px;height:40px;border-radius:12px;background:#0ea5e9;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">MC</div>
+              <div style="font-size:18px;font-weight:700;color:#0f172a">MedCore</div>
+            </div>
+            <div style="margin-top:16px;background:linear-gradient(135deg,#0ea5e9 0%, #22c55e 100%);height:4px;border-radius:9999px;width:100%"></div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px">
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:24px">
+              <h1 style="margin:0 0 12px 0;font-size:20px;color:#0f172a">Hola ${fullname},</h1>
+              <p style="margin:0 0 16px 0;color:#334155;line-height:1.6">
+                Para mantener la seguridad de la información clínica, necesitamos verificar tu correo electrónico.
+                Ingresa el siguiente código en la aplicación para activar tu cuenta:
+              </p>
+              <div style="text-align:center;margin:20px 0">
+                <div style="display:inline-block;background:#0ea5e9;color:#fff;font-size:28px;font-weight:800;padding:12px 24px;border-radius:10px;letter-spacing:4px;box-shadow:0 6px 16px rgba(14,165,233,.35)">
+                  ${verificationCode}
+                </div>
+              </div>
+              <p style="margin:0;color:#334155;line-height:1.6">
+                El código expira en <strong>15 minutos</strong> por motivos de seguridad. Si no fuiste tú quien solicitó esta verificación, puedes ignorar este mensaje.
+              </p>
+              <div style="margin-top:16px;padding:12px;border-radius:12px;background:#f0fdfa;color:#065f46;border:1px solid #a7f3d0">
+                Consejo: si usas correo corporativo, revisa la carpeta de spam o añade este remitente a tu lista de contactos.
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 24px 24px 24px;text-align:center;color:#64748b;font-size:12px">
+            © ${new Date().getFullYear()} MedCore · Sistemas para clínicas y profesionales de la salud
+          </td>
+        </tr>
+      </table>
     </div>
     `,
   };
