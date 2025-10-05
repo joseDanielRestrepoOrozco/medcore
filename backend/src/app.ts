@@ -1,15 +1,12 @@
 import express from 'express';
+import './types/express';
 import cors from 'cors';
-
-import connectDB from './database/setup';
 import router from './routes/routes';
 import unknownEndpoint from './middlewares/unknownEndpoint';
 import errorHandler from './middlewares/errorHandler';
 import { FRONTEND_ORIGIN } from './libs/config';
 
 const app = express();
-
-connectDB();
 
 app.use(express.json());
 const allowedOrigins = (FRONTEND_ORIGIN || 'http://localhost:5173')
@@ -27,6 +24,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use('/api/v1', router);
 
 app.use(unknownEndpoint);

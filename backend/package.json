@@ -7,11 +7,12 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "tsc",
+    "start": "node dist/index.js",
     "dev": "ts-node-dev src/index.ts",
-    "lint": "eslint --ext .ts .",
-    "start": "node dist/index.js"
+    "dev:test": "dotenv -e .env.test ts-node-dev src/index.ts",
+    "test": "dotenv -e .env.test vitest --config ./vitest.config.ts",
+    "tsc": "tsc",
+    "lint": "eslint --ext .ts ."
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
@@ -19,19 +20,23 @@
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/mongoose": "^5.11.96",
     "@types/node": "^24.5.2",
     "@types/nodemailer": "^7.0.1",
+    "@types/supertest": "^6.0.3",
     "bcrypt": "^6.0.0",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9.34.0",
     "globals": "^16.3.0",
     "jiti": "^2.5.1",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.16.2",
+    "supertest": "^7.1.4",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.41.0"
+    "typescript-eslint": "^8.41.0",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -41,7 +46,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "mongoose": "^8.18.2",
+    "mailslurp-client": "^16.0.0",
     "nodemailer": "^7.0.6",
     "zod": "^4.1.11"
   }
