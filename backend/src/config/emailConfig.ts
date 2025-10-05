@@ -66,9 +66,6 @@ const sendVerificationEmail = async (
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Email enviado: ${info.messageId}`);
-    console.log(`correo destino: ${mailOptions.to}`);
-    console.log(SMTP_HOST, SMTP_PORT, SMTP_USER);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     if (error instanceof Error) {

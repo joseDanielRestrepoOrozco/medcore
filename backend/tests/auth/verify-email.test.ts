@@ -1,0 +1,105 @@
+import { describe, test, beforeEach, expect } from 'vitest';
+import { setupAuthTests, api } from './setup';
+import { TEST_EMAIL } from '../../src/libs/config';
+import getLastEmail from '../utils';
+
+setupAuthTests();
+
+describe('Email Verification', () => {
+  beforeEach(async () => {
+    // Crear un usuario para las pruebas de verificación
+    await api.post('/api/v1/auth/sign-up').send({
+      email: TEST_EMAIL,
+      currentPassword: '123456',
+      fullname: 'Test User',
+    });
+  });
+
+  test('should verify email with correct code', async () => {
+    // Obtener el código del email
+    const email = await getLastEmail();
+    const verificationCode = email.Content.Body.match(/\d{6}/)?.[0];
+
+    const response = await api
+      .post('/api/v1/auth/verify-email')
+      .send({
+        email: TEST_EMAIL,
+        verificationCode,
+      })
+      .expect(200);
+
+    expect(response.body.message).toBeTruthy();
+  });
+
+  describe('Email verification validation errors', () => {
+    test('should return 400 for invalid email format', async () => {
+      const response = await api
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: 'invalid-email',
+          verificationCode: '123456',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for empty verification code', async () => {
+      const response = await api
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: TEST_EMAIL,
+          verificationCode: '',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for verification code too long', async () => {
+      const response = await api
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: TEST_EMAIL,
+          verificationCode: '1234567',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for missing email field', async () => {
+      const response = await api
+        .post('/api/v1/auth/verify-email')
+        .send({
+          verificationCode: '123456',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for missing verification code field', async () => {
+      const response = await api
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: TEST_EMAIL,
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for incorrect verification code', async () => {
+      const response = await api
+        .post('/api/v1/auth/verify-email')
+        .send({
+          email: TEST_EMAIL,
+          verificationCode: '000000',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+  });
+});

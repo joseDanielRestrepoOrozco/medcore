@@ -1,0 +1,127 @@
+import { describe, test, beforeEach, expect } from 'vitest';
+import { setupAuthTests, api } from './setup';
+import { TEST_EMAIL } from '../../src/libs/config';
+import getLastEmail from '../utils';
+
+setupAuthTests();
+
+describe('Login', () => {
+  beforeEach(async () => {
+    // Crear y verificar un usuario para las pruebas de login
+    await api.post('/api/v1/auth/sign-up').send({
+      email: TEST_EMAIL,
+      currentPassword: '123456',
+      fullname: 'Test User',
+    });
+
+    // Obtener código y verificar usuario
+    const email = await getLastEmail();
+    const verificationCode = email.Content.Body.match(/\d{6}/)?.[0];
+
+    await api.post('/api/v1/auth/verify-email').send({
+      email: TEST_EMAIL,
+      verificationCode,
+    });
+  });
+
+  test('should login with correct credentials', async () => {
+    const response = await api.post('/api/v1/auth/log-in').send({
+      email: TEST_EMAIL,
+      currentPassword: '123456',
+    });
+
+    expect(response.body.token).toBeTruthy();
+    expect(response.body.user).toBeTruthy();
+  });
+
+  describe('Login validation errors', () => {
+    test('should return 400 for invalid email format', async () => {
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          email: 'invalid-email',
+          currentPassword: '123456',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for password without numbers', async () => {
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          email: TEST_EMAIL,
+          currentPassword: 'abcdef',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for missing email field', async () => {
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          currentPassword: '123456',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for missing password field', async () => {
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          email: TEST_EMAIL,
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 401 for incorrect password', async () => {
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          email: TEST_EMAIL,
+          currentPassword: '654321',
+        })
+        .expect(401);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 401 for non-existent email', async () => {
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          email: 'nonexistent@example.com',
+          currentPassword: '123456',
+        })
+        .expect(401);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 401 for unverified user', async () => {
+      // Crear un usuario sin verificar
+      await api.post('/api/v1/auth/sign-up').send({
+        email: 'unverified@example.com',
+        currentPassword: '123456',
+        fullname: 'Unverified User',
+      });
+
+      const response = await api
+        .post('/api/v1/auth/log-in')
+        .send({
+          email: 'unverified@example.com',
+          currentPassword: '123456',
+        })
+        .expect(401);
+
+      expect(response.body.error).toBeTruthy();
+    });
+  });
+});

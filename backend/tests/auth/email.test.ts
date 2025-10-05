@@ -1,0 +1,36 @@
+import { describe, test, expect } from 'vitest';
+import { setupAuthTests, api } from './setup';
+import { TEST_EMAIL } from '../../src/libs/config';
+import getLastEmail from '../utils';
+
+setupAuthTests();
+
+describe('Email', () => {
+  test('User Registration - Successful Registration and Email Sent', async () => {
+    const userData = {
+      email: TEST_EMAIL,
+      currentPassword: '123456',
+      fullname: 'Test User',
+    };
+
+    const response = await api
+      .post('/api/v1/auth/sign-up')
+      .send(userData)
+      .expect(201)
+      .expect('Content-Type', /application\/json/);
+
+    // Verificar usuario creado
+    expect(response.body.email).toBe(userData.email);
+    expect(response.body.fullname).toBe(userData.fullname);
+    expect(response.body.status).toBe('PENDING');
+    expect(response.body.message).toBe(
+      'Usuario creado. Código enviado al correo.'
+    );
+
+    const email = await getLastEmail();
+    expect(email).toBeTruthy();
+
+    const verificationCode = email.Content.Body.match(/\d{6}/);
+    expect(verificationCode).toBeTruthy();
+  });
+});

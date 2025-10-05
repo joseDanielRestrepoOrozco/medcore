@@ -1,0 +1,78 @@
+import { describe, test, beforeEach, expect } from 'vitest';
+import { setupAuthTests, api } from './setup';
+import { TEST_EMAIL } from '../../src/libs/config';
+import getLastEmail from '../utils';
+
+setupAuthTests();
+
+describe('Resend Verification Code', () => {
+  beforeEach(async () => {
+    // Crear un usuario para las pruebas de reenvío
+    await api.post('/api/v1/auth/sign-up').send({
+      email: TEST_EMAIL,
+      currentPassword: '123456',
+      fullname: 'Test User',
+    });
+  });
+
+  test('should resend verification code for existing unverified user', async () => {
+    const response = await api
+      .post('/api/v1/auth/resend-verification-code')
+      .send({
+        email: TEST_EMAIL,
+      })
+      .expect(200);
+
+    expect(response.body.message).toBeTruthy();
+
+    // Verificar que se envió un nuevo email
+    const email = await getLastEmail();
+    expect(email).toBeTruthy();
+    const verificationCode = email.Content.Body.match(/\d{6}/);
+    expect(verificationCode).toBeTruthy();
+  });
+
+  describe('Resend verification code validation errors', () => {
+    test('should return 400 for invalid email format', async () => {
+      const response = await api
+        .post('/api/v1/auth/resend-verification-code')
+        .send({
+          email: 'invalid-email',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for missing email field', async () => {
+      const response = await api
+        .post('/api/v1/auth/resend-verification-code')
+        .send({})
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for empty email', async () => {
+      const response = await api
+        .post('/api/v1/auth/resend-verification-code')
+        .send({
+          email: '',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeTruthy();
+    });
+
+    test('should return 400 for non-existent email', async () => {
+      const response = await api
+        .post('/api/v1/auth/resend-verification-code')
+        .send({
+          email: 'nonexistent@example.com',
+        })
+        .expect(404);
+
+      expect(response.body.error).toBeTruthy();
+    });
+  });
+});

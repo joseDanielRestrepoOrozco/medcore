@@ -11,3 +11,5 @@ export const SMTP_PASS = process.env.SMTP_PASS;
 export const SMTP_SECURE = process.env.SMTP_SECURE;
 export const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 export const NODE_ENV = process.env.NODE_ENV;
+export const TEST_EMAIL = process.env.TEST_EMAIL;
+export const MAILHOG_URL = process.env.MAILHOG_URL;
