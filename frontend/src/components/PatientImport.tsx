@@ -5,7 +5,9 @@ type Props = {
   onProcess?: (file: File) => void;
 };
 
-const sampleCsv = `nombre,apellido,documento,correo\nAna,Gomez,12345678,ana@example.com\nJuan,Perez,87654321,juan@example.com`;
+// Plantilla con columnas requeridas por el backend
+// fecha_nacimiento debe ir en formato YYYY-MM-DD
+const sampleCsv = `nombre,apellido,fecha_nacimiento,correo,telefono,genero\nAna,Gomez,1990-03-12,ana@example.com,3001234567,FEMALE\nJuan,Perez,1985-10-02,juan@example.com,3019876543,MALE`;
 
 const PatientImport: React.FC<Props> = ({ onProcess }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -70,11 +72,17 @@ const PatientImport: React.FC<Props> = ({ onProcess }) => {
   };
 
   const parseCsv = async (f: File) => {
-    const text = await f.text();
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    const header = (lines.shift() || '').split(',').map((s) => s.trim());
+    const raw = await f.text();
+    // Remover BOM si existe
+    const text = raw.replace(/^\uFEFF/, '');
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (lines.length === 0) return [] as Array<Record<string, string>>;
+    // Detectar delimitador: ';' o ',' (común en regionales)
+    const first = lines[0];
+    const delimiter = first.includes(';') && first.split(';').length > first.split(',').length ? ';' : ',';
+    const header = (lines.shift() || '').split(delimiter).map((s) => s.trim());
     const rows = lines.map((line) => {
-      const cols = line.split(',');
+      const cols = line.split(delimiter);
       const obj: Record<string, string> = {};
       header.forEach((h, i) => (obj[h] = (cols[i] || '').trim()));
       return obj;
@@ -95,7 +103,13 @@ const PatientImport: React.FC<Props> = ({ onProcess }) => {
       const res = await api.post('/patients/bulk-import', payload);
       const ok = res.data?.summary?.successful ?? 0;
       const fail = res.data?.summary?.failed ?? 0;
-      setMessage(`Importación completada. Éxitos: ${ok}, Fallidos: ${fail}`);
+      const failedRows: Array<{ index: number; error: string }> = res.data?.summary?.errors || res.data?.results?.failed?.map((r: any) => ({ index: r.index, error: r.error })) || [];
+      let msg = `Importación completada. Éxitos: ${ok}, Fallidos: ${fail}`;
+      if (fail > 0) {
+        msg += `. Verifica que el CSV incluya la columna obligatoria fecha_nacimiento (YYYY-MM-DD) y datos válidos.`;
+      }
+      setMessage(msg);
+      (window as any).__bulkErrors = failedRows; // exposición rápida para depurar desde consola si hace falta
       onProcess?.(file);
     } catch (e) {
       setMessage('Error procesando la importación');

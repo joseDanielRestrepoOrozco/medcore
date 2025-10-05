@@ -1,13 +1,54 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AdminSidebar from '../components/AdminSidebar';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const displayName = user?.fullname || user?.email || 'Juan Pérez';
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'config' | 'audit'>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [usersActive, setUsersActive] = useState<number>(0);
+  const [patientsTotal, setPatientsTotal] = useState<number>(0);
+  const [newUsersWeek, setNewUsersWeek] = useState<number>(0);
+  const [feed, setFeed] = useState<Array<{ title: string; level: 'Info' | 'Alerta'; when: string }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Usuarios activos (VERIFIED)
+        const u = await api.get('/users', { params: { status: 'VERIFIED', limit: 1, page: 1 } });
+        setUsersActive(u.data?.pagination?.total || 0);
+
+        // Total pacientes
+        const p = await api.get('/patients', { params: { limit: 1, page: 1 } });
+        setPatientsTotal(p.data?.pagination?.total || 0);
+
+        // Nuevos usuarios en 7 días (aprox: primera página)
+        const uList = await api.get('/users', { params: { limit: 50, page: 1 } });
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const recent = (uList.data?.users || []).filter((it: any) => it.createdAt && new Date(it.createdAt).getTime() >= sevenDaysAgo);
+        setNewUsersWeek(recent.length);
+
+        // Feed reciente: mezcla de usuarios/pacientes últimos
+        const pList = await api.get('/patients', { params: { limit: 10, page: 1 } });
+        const usersEvents = (uList.data?.users || []).slice(0, 5).map((it: any) => ({
+          title: `Nuevo usuario: ${it.fullname || it.email}`,
+          level: 'Info' as const,
+          when: it.createdAt || new Date().toISOString(),
+        }));
+        const patientEvents = (pList.data?.patients || []).slice(0, 5).map((it: any) => ({
+          title: `Nuevo paciente: ${it.firstName} ${it.lastName}`,
+          level: 'Info' as const,
+          when: it.createdAt || new Date().toISOString(),
+        }));
+        const merged = [...usersEvents, ...patientEvents].sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime()).slice(0, 6);
+        setFeed(merged);
+      } catch (_) {
+        // silencioso en panel
+      }
+    })();
+  }, []);
 
   return (
     <div className="flex">
@@ -60,26 +101,7 @@ const AdminDashboard = () => {
           </div>
         </section>
 
-        {/* Pestañas secundarias */}
-        <div className="mt-6">
-          <div className="inline-flex bg-white p-1 rounded-full border border-slate-200">
-            {[
-              { key: 'dashboard', label: 'Dashboard' },
-              { key: 'config', label: 'Configuraciones' },
-              { key: 'audit', label: 'Auditoría' },
-            ].map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key as typeof activeTab)}
-                className={`px-4 py-2 rounded-full text-sm ${
-                  activeTab === t.key ? 'bg-slate-800 text-white' : 'text-slate-700'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Pestañas secundarias eliminadas por requerimiento */}
 
         {/* Métricas del sistema */}
         <section className="mt-6 bg-white border rounded-xl p-4">
@@ -98,15 +120,15 @@ const AdminDashboard = () => {
         <section className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border p-4">
             <div className="text-sm text-slate-500">Usuarios Activos</div>
-            <div className="mt-2 text-3xl font-bold">150</div>
+            <div className="mt-2 text-3xl font-bold">{usersActive}</div>
           </div>
           <div className="bg-white rounded-xl border p-4">
             <div className="text-sm text-slate-500">Pacientes Registrados</div>
-            <div className="mt-2 text-3xl font-bold">300</div>
+            <div className="mt-2 text-3xl font-bold">{patientsTotal}</div>
           </div>
           <div className="bg-white rounded-xl border p-4">
-            <div className="text-sm text-slate-500">Accesos Fallidos</div>
-            <div className="mt-2 text-3xl font-bold">12</div>
+            <div className="text-sm text-slate-500">Nuevos (7 días)</div>
+            <div className="mt-2 text-3xl font-bold">{newUsersWeek}</div>
           </div>
         </section>
 
@@ -123,23 +145,22 @@ const AdminDashboard = () => {
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="bg-white p-6 rounded-xl border lg:col-span-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Nuevas Incidencias</h3>
-              <button className="px-3 py-2 bg-slate-800 text-white rounded text-sm">Ver Todas las Incidencias</button>
+              <h3 className="text-lg font-semibold">Actividad reciente</h3>
+              <Link to="/admin/usuarios" className="px-3 py-2 bg-slate-800 text-white rounded text-sm">Ver más</Link>
             </div>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { title: 'Intento de acceso no autorizado', level: 'Urgente', color: 'bg-rose-500' },
-                { title: 'Credenciales inválidas repetidas', level: 'Moderado', color: 'bg-amber-400' },
-                { title: 'Cambio de rol aprobado', level: 'Info', color: 'bg-slate-400' },
-              ].map((i, idx) => (
+              {feed.map((i, idx) => (
                 <div key={idx} className="p-4 rounded-lg border bg-slate-50">
                   <div className="flex items-center justify-between">
                     <div className="font-semibold text-slate-800 text-sm pr-2">{i.title}</div>
-                    <span className={`px-2 py-0.5 text-xs text-white rounded-full ${i.color}`}>{i.level}</span>
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${i.level === 'Alerta' ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-800'}`}>{i.level}</span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-600">Hace {idx + 1} h • Sistema</p>
+                  <p className="mt-2 text-xs text-slate-600">{new Date(i.when).toLocaleString()}</p>
                 </div>
               ))}
+              {feed.length === 0 && (
+                <div className="p-4 rounded-lg border bg-slate-50 text-sm text-slate-600">Sin actividad reciente</div>
+              )}
             </div>
           </section>
 
