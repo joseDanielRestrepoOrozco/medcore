@@ -1,5 +1,11 @@
 import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
-import { SMTP_PASS, SMTP_USER } from '../libs/config';
+import {
+  NODE_ENV,
+  SMTP_HOST,
+  SMTP_PASS,
+  SMTP_PORT,
+  SMTP_USER,
+} from '../libs/config';
 
 interface MailResult {
   success: boolean;
@@ -8,7 +14,11 @@ interface MailResult {
 }
 
 const transporter: Transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: NODE_ENV === 'production' ? 'gmail' : undefined,
+
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS,
@@ -57,6 +67,8 @@ const sendVerificationEmail = async (
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log(`Email enviado: ${info.messageId}`);
+    console.log(`correo destino: ${mailOptions.to}`);
+    console.log(SMTP_HOST, SMTP_PORT, SMTP_USER);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     if (error instanceof Error) {

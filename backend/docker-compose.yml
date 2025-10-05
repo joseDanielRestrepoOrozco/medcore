@@ -17,5 +17,13 @@ services:
       - db-mongodb # Asegura que MongoDB se inicie primero
     networks:
       - app-network
-
+  # Servicio de servidor de correo MailHog para pruebas
+  mailhog:
+    container_name: docker_mailhog
+    image: mailhog/mailhog:latest
+    logging:
+      driver: none # disable saving logs
+    ports:
+      - "1025:1025" # smtp server
+      - "8025:8025" # web ui
 # ... (El resto del docker-compose.yml con los otros servicios) ...
