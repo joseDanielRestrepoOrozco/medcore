@@ -9,7 +9,7 @@ const currentPassword = z
   });
 
 export const signupSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   currentPassword,
   fullname: z.string().min(1),
   role: z.enum(['MEDICO', 'ENFERMERA', 'PACIENTE', 'ADMINISTRADOR']).optional().default('ADMINISTRADOR'),
