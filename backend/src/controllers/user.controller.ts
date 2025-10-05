@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import emailConfig from '../config/emailConfig';
 const prisma = new PrismaClient();
 
 const userSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.email('Email inválido'),
   fullname: z.string().min(1, 'Nombre completo requerido'),
   currentPassword: z.string().min(1, 'Contraseña requerida'),
   role: z.enum(['MEDICO', 'ENFERMERA', 'PACIENTE', 'ADMINISTRADOR']),
@@ -27,11 +27,11 @@ const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { role, status, page = 1, limit = 10 } = req.query;
-    
-    const where: any = {};
-    if (role) where.role = role;
-    if (status) where.status = status;
+  const { role, status, page = 1, limit = 10 } = req.query;
+
+  const where: Prisma.UsersWhereInput = {};
+  if (role && typeof role === 'string') where.role = role;
+  if (status && typeof status === 'string') where.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -149,8 +149,8 @@ const bulkCreateUsers = async (
     const usersData = bulkUsersSchema.parse(req.body.users || req.body);
 
     const results = {
-      successful: [] as any[],
-      failed: [] as any[],
+      successful: [] as { index: number; user: unknown }[],
+      failed: [] as { index: number; email: string; error: string }[],
       total: usersData.length
     };
 
@@ -210,11 +210,12 @@ const bulkCreateUsers = async (
               index: i + index,
               user: newUser
             });
-          } catch (userError: any) {
+          } catch (userError: unknown) {
+            const message = userError instanceof Error ? userError.message : 'Error desconocido';
             results.failed.push({
               index: i + index,
               email: userData.email,
-              error: userError.message || 'Error desconocido'
+              error: message
             });
           }
         })
