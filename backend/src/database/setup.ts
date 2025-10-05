@@ -1,22 +1,16 @@
-import mongoose from 'mongoose';
-import { DATABASE_URL } from '../libs/config';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 const connectDB = async () => {
-  console.log('connecting to database...');
-
+  console.log('connecting to database (Prisma)...');
   try {
-    mongoose.set('strictQuery', false);
-    
-    if (!DATABASE_URL) {
-      throw new Error('DATABASE_URL is not defined in environment variables');
-    }
-
-    const conn = await mongoose.connect(DATABASE_URL);
-    console.log(`Database connected: ${conn.connection.name}`);
+    await prisma.$connect();
+    console.log('Prisma connected');
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('Prisma connection error:', error);
     process.exit(1);
   }
 };
 
+export { prisma };
 export default connectDB;
