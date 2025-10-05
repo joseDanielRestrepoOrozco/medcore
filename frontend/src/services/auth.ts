@@ -12,6 +12,8 @@ export type AuthUser = {
   email: string;
   fullname: string;
   status: string;
+  // opcional hasta que el backend lo envíe
+  role?: 'admin' | 'patient' | 'medico';
 };
 
 export type SignUpResponse = {

@@ -1,5 +1,5 @@
 import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
-import { SMTP_PASS, SMTP_USER } from '../libs/config';
+import { SMTP_PASS, SMTP_USER, SMTP_HOST, SMTP_PORT, SMTP_SECURE, EMAIL_ENABLED } from '../libs/config';
 
 interface MailResult {
   success: boolean;
@@ -7,13 +7,31 @@ interface MailResult {
   error?: string;
 }
 
-const transporter: Transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+// Normalize password (Gmail App Passwords must not contain spaces)
+const normalizedPass = (SMTP_PASS || '').replace(/\s+/g, '');
+
+// Prefer explicit host/port if provided; fallback to Gmail service
+const transporter: Transporter = nodemailer.createTransport(
+  SMTP_HOST
+    ? {
+        host: SMTP_HOST,
+        port: SMTP_PORT ? Number(SMTP_PORT) : 587,
+        secure: String(SMTP_SECURE).toLowerCase() === 'true',
+        auth: {
+          user: SMTP_USER,
+          pass: normalizedPass,
+        },
+      }
+    : {
+        service: 'gmail',
+        auth: {
+          user: SMTP_USER,
+          pass: normalizedPass,
+        },
+      }
+);
+
+let transporterVerified = false;
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -25,6 +43,27 @@ const sendVerificationEmail = async (
   fullname: string,
   verificationCode: string
 ): Promise<MailResult> => {
+  console.log('[emailConfig] EMAIL_ENABLED=', String(EMAIL_ENABLED));
+  console.log('[emailConfig] transport mode=', SMTP_HOST ? `host=${SMTP_HOST} port=${SMTP_PORT} secure=${SMTP_SECURE}` : 'gmail service');
+  console.log('[emailConfig] SMTP_USER set=', Boolean(SMTP_USER));
+  if (String(EMAIL_ENABLED).toLowerCase() === 'false') {
+    console.warn('[emailConfig] EMAIL_ENABLED=false — omitiendo envío de correo.');
+    console.log(`[DEV] Código de verificación para ${email}: ${verificationCode}`);
+    return { success: true };
+  }
+
+  try {
+    if (!transporterVerified) {
+      await transporter.verify();
+      transporterVerified = true;
+      console.log('[emailConfig] transporter verified');
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[emailConfig] transporter verification failed:', msg);
+    return { success: false, error: msg };
+  }
+
   const mailOptions: SendMailOptions = {
     from: SMTP_USER,
     to: email,

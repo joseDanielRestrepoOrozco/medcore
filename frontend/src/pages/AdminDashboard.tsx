@@ -7,11 +7,35 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const displayName = user?.fullname || user?.email || 'Juan Pérez';
   const [activeTab, setActiveTab] = useState<'dashboard' | 'config' | 'audit'>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex">
-      <AdminSidebar active="usuarios" />
-      <div className="flex-1 p-6 bg-slate-100 min-h-screen">
+      {/* Static sidebar on md+ */}
+      <div className="hidden md:block">
+        <AdminSidebar active="usuarios" />
+      </div>
+
+      {/* Overlay sidebar on mobile */}
+      {sidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="flex-1 bg-black/30" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+          <div className="w-72 bg-white border-l min-h-full p-0 shadow-xl">
+            <AdminSidebar active="usuarios" />
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 p-4 md:p-6 bg-slate-100 min-h-screen">
+        {/* mobile toggle */}
+        <button
+          type="button"
+          className="md:hidden mb-4 px-3 py-2 rounded border bg-white"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menú"
+        >
+          Menú
+        </button>
         {/* Tarjeta de Perfil */}
         <section className="bg-slate-800 text-white rounded-2xl p-6 flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -32,12 +56,6 @@ const AdminDashboard = () => {
               onClick={() => {/* navegar a perfil */}}
             >
               Ver Perfil
-            </button>
-            <button
-              className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm border border-white/10"
-              onClick={logout}
-            >
-              Cerrar Sesión
             </button>
           </div>
         </section>

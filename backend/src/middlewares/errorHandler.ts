@@ -7,7 +7,7 @@ const errorHandler = (
   error: unknown,
   _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   if (error instanceof PrismaClientKnownRequestError) {
     if (error.code === 'P2023') {
@@ -31,7 +31,10 @@ const errorHandler = (
     return;
   }
 
-  next(error);
+  // Log desconocidos y responder 500 genérico
+  const message = error instanceof Error ? error.message : String(error);
+  console.error('[Unhandled Error]', message, error);
+  res.status(500).json({ error: 'Internal server error' });
 };
 
 export default errorHandler;

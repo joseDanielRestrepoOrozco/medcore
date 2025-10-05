@@ -40,7 +40,8 @@ const VerifyEmail = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded shadow">
+    <div className="min-h-[calc(100vh-11rem)] flex items-center">
+      <div className="max-w-md mx-auto p-6 bg-white rounded shadow">
       <h2 className="text-2xl mb-4 font-semibold">Verificar correo</h2>
       {error && <div className="text-red-600 mb-2">{error}</div>}
       <form onSubmit={handleVerify} className="space-y-3">
@@ -49,6 +50,7 @@ const VerifyEmail = () => {
         <button disabled={loading} className="w-full p-3 bg-green-600 text-white rounded">{loading ? 'Verificando...' : 'Verificar'}</button>
       </form>
       <button onClick={handleResend} className="mt-4 text-sm text-blue-600">Reenviar código</button>
+      </div>
     </div>
   );
 };

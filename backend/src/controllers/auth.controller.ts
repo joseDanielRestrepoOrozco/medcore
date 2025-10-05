@@ -14,13 +14,16 @@ const signup = async (
 ): Promise<void> => {
   try {
     const newUser = signupSchema.parse(req.body);
+    console.log('[signup] request', { email: newUser.email, fullname: newUser.fullname });
 
+    // Evitar leer campos con tipos inválidos en documentos antiguos
     const userExist = await prisma.users.findUnique({
       where: { email: newUser.email },
+      select: { id: true },
     });
 
     if (userExist) {
-      console.log('User already exists');
+      console.log('[signup] user already exists:', newUser.email);
       res.status(400).json({ error: 'User already exists' });
       return;
     }
@@ -41,7 +44,9 @@ const signup = async (
         verificationCodeExpires,
       },
     });
+    console.log('[signup] user created', { id: createUser.id, email: createUser.email });
 
+    console.log('[signup] sending verification email...');
     const emailResult = await emailConfig.sendVerificationEmail(
       newUser.email,
       newUser.fullname,
@@ -49,6 +54,7 @@ const signup = async (
     );
 
     if (!emailResult.success) {
+      console.error('[signup] email sending failed:', emailResult.error);
       await prisma.users.delete({
         where: { id: createUser.id },
       });
@@ -65,6 +71,7 @@ const signup = async (
       message: 'Usuario creado. Código enviado al correo.'
     });
   } catch (error: unknown) {
+    console.error('[signup] unhandled error', error);
     next(error);
   }
 };
@@ -81,6 +88,13 @@ const login = async (
     // Buscar usuario por email
     const user = await prisma.users.findUnique({
       where: { email: loginData.email },
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        status: true,
+        currentPassword: true,
+      },
     });
 
     if (!user) {
@@ -148,6 +162,14 @@ const verifyEmail = async (
     // Buscar usuario por email
     const user = await prisma.users.findUnique({
       where: { email: verifyData.email },
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        status: true,
+        verificationCode: true,
+        verificationCodeExpires: true,
+      },
     });
 
     if (!user) {
@@ -209,6 +231,12 @@ const resendVerificationCode = async (
     // Buscar usuario por email
     const user = await prisma.users.findUnique({
       where: { email: resendData.email },
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        status: true,
+      },
     });
 
     if (!user) {
