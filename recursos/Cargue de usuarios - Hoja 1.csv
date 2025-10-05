@@ -1,0 +1,5 @@
+"email,fullname,role,current_password,status,specialization,department,license_number,phone,date_of_birth"
+"doctor1@medcore.com,Dr. Ana María González,MEDICO,TempPass123!,PENDING,CARDIOLOGIA,MEDICINA_INTERNA,12345-MD,+57-300-1234567,1985-03-15"
+"nurse1@medcore.com,María Elena Rodríguez,ENFERMERA,TempPass123!,PENDING,,URGENCIAS,,+57-300-2345678,1990-07-22"
+"admin1@medcore.com,Carlos Alberto Méndez,ADMINISTRADOR,TempPass123!,ACTIVE,,ADMINISTRACION,,+57-300-3456789,1980-11-08"
+"patient1@medcore.com,Luis Fernando Castro,PACIENTE,TempPass123!,PENDING,,,,,1995-09-12"

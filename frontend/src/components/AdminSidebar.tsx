@@ -40,10 +40,10 @@ const IconSettings = (
 
 const AdminSidebar: React.FC<{ active?: string }> = ({ active = 'usuarios' }) => {
   const items: Item[] = [
-    { key: 'panel', label: 'Panel de Control', icon: IconReports },
-    { key: 'usuarios', label: 'Usuarios', icon: IconUsers },
-    { key: 'pacientes', label: 'Pacientes', icon: IconPatients },
-    { key: 'carga', label: 'Carga Masiva', icon: IconFinance },
+    { key: 'panel', label: 'Panel de Control', icon: IconReports, to: '/admin' },
+    { key: 'usuarios', label: 'Usuarios', icon: IconUsers, to: '/admin/usuarios' },
+    { key: 'pacientes', label: 'Pacientes', icon: IconPatients, to: '/admin/pacientes' },
+    { key: 'carga', label: 'Carga Masiva', icon: IconFinance, to: '/admin/carga' },
     { key: 'reportes', label: 'Reportes', icon: IconReports },
     { key: 'ajustes', label: 'Ajustes', icon: IconSettings },
   ];

@@ -28,16 +28,24 @@ const AuthStatus = () => {
     role === 'ADMINISTRADOR' ? '/admin' : role === 'PACIENTE' ? '/patient' : role === 'MEDICO' ? '/medico' : '/dashboard';
 
   return (
-    <div className="flex items-center space-x-4">
-      {/* Nombre visible */}
-      <span className="text-sm text-slate-900">{displayName}</span>
+    <div className="flex items-center space-x-3">
+      <span className="text-sm text-slate-900 hidden sm:inline">{displayName}</span>
 
-      {/* Quitar botón 'Dashboard': se redirige automáticamente por rol */}
-      <Link to="/profile" className="px-4 py-2 rounded-full text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50">Perfil</Link>
-      <Link to="/settings" className="px-4 py-2 rounded-full text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50">Configuración</Link>
-
-      {/* Botón claro e intuitivo para salir */}
-      <button type="button" onClick={logout} className="px-4 py-2 rounded-full text-sm font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50">Cerrar sesión</button>
+      {/* Icono de perfil removido (ya accesible desde el panel) */}
+      {/* Ajustes removido del header (está en el sidebar) */}
+      <button
+        type="button"
+        onClick={logout}
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+        className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center bg-white"
+      >
+        {/* Icono de encendido/apagado (power) */}
+        <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v9" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.4 7.34A8 8 0 1 1 4.6 7.34" />
+        </svg>
+      </button>
     </div>
   );
 };

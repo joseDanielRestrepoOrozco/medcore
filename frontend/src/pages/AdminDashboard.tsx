@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AdminSidebar from '../components/AdminSidebar';
-import PatientImport from '../components/PatientImport';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -13,7 +13,7 @@ const AdminDashboard = () => {
     <div className="flex">
       {/* Static sidebar on md+ */}
       <div className="hidden md:block">
-        <AdminSidebar active="usuarios" />
+        <AdminSidebar active="panel" />
       </div>
 
       {/* Overlay sidebar on mobile */}
@@ -21,7 +21,7 @@ const AdminDashboard = () => {
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/30" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
           <div className="w-72 bg-white border-l min-h-full p-0 shadow-xl">
-            <AdminSidebar active="usuarios" />
+            <AdminSidebar active="panel" />
           </div>
         </div>
       )}
@@ -51,12 +51,12 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Link
+              to="/profile"
               className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm border border-white/10"
-              onClick={() => {/* navegar a perfil */}}
             >
               Ver Perfil
-            </button>
+            </Link>
           </div>
         </section>
 
@@ -110,10 +110,13 @@ const AdminDashboard = () => {
           </div>
         </section>
 
-        {/* Importar pacientes */}
+        {/* Enlace a Carga Masiva */}
         <section className="mt-8 bg-white p-6 rounded-xl border">
-          <h3 className="text-lg font-semibold mb-2">Importar Datos de Pacientes</h3>
-          <PatientImport />
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Carga Masiva</h3>
+            <a href="/admin/carga" className="px-3 py-2 bg-slate-800 text-white rounded text-sm">Ir a Carga</a>
+          </div>
+          <p className="text-sm text-slate-600 mt-2">Administra la importación de pacientes desde el apartado dedicado.</p>
         </section>
 
         {/* Secciones inferiores */}

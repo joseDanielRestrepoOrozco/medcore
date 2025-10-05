@@ -16,6 +16,10 @@ const createPatient = async (req: Request, res: Response, next: NextFunction): P
     const data = patientCreateSchema.parse(req.body);
     const dob = new Date(data.dateOfBirth);
     const age = calculateAge(dob);
+    if (age < 0 || age > 100) {
+      res.status(400).json({ error: 'Edad fuera de rango permitido (0-100)' });
+      return;
+    }
 
     const verificationCode = emailConfig.generateVerificationCode?.() || Math.random().toString(36).slice(2, 8).toUpperCase();
     const verificationCodeExpires = new Date();
@@ -89,7 +93,12 @@ const updatePatient = async (req: Request, res: Response, next: NextFunction): P
     if (data.dateOfBirth) {
       const dob = new Date(data.dateOfBirth as string);
       updateData.dateOfBirth = dob;
-      updateData.age = calculateAge(dob);
+      const age = calculateAge(dob);
+      if (age < 0 || age > 100) {
+        res.status(400).json({ error: 'Edad fuera de rango permitido (0-100)' });
+        return;
+      }
+      updateData.age = age;
     }
 
     // Use Prisma types for update data
@@ -112,4 +121,51 @@ const updatePatientState = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export default { createPatient, listPatients, getPatientById, updatePatient, updatePatientState };
+// Bulk import (JSON payload) — espera { patients: Array<Record<string,string>> }
+export const bulkImport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const patients = (req.body?.patients || []) as Array<Record<string, string>>;
+    if (!Array.isArray(patients) || patients.length === 0) {
+      res.status(400).json({ error: 'Sin datos para importar' });
+      return;
+    }
+    const results = { successful: 0, failed: 0, errors: [] as Array<{ index: number; error: string }> };
+    for (let i = 0; i < patients.length; i++) {
+      const row = patients[i];
+      try {
+        // map keys: firstName,lastName,email,phone,gender,dateOfBirth
+        const payload = {
+          firstName: row.firstName || row.nombre || row.first_name,
+          lastName: row.lastName || row.apellido || row.last_name,
+          email: row.email || row.correo || undefined,
+          phone: row.phone || row.telefono || undefined,
+          gender: (row.gender || row.genero || '').toUpperCase() || undefined,
+          dateOfBirth: row.dateOfBirth || row.fecha_nacimiento || row.fechaNacimiento,
+        };
+        patientCreateSchema.parse(payload);
+        const dob = new Date(String(payload.dateOfBirth));
+        const age = calculateAge(dob);
+        await prisma.patient.create({
+          data: {
+            firstName: String(payload.firstName),
+            lastName: String(payload.lastName),
+            email: payload.email || null,
+            phone: payload.phone || null,
+            gender: payload.gender || null,
+            dateOfBirth: dob,
+            age,
+          },
+        });
+        results.successful++;
+      } catch (e: any) {
+        results.failed++;
+        results.errors.push({ index: i, error: e?.message || 'Error' });
+      }
+    }
+    res.status(200).json({ message: 'Importación completada', summary: results });
+  } catch (error: unknown) {
+    next(error);
+  }
+};
+
+export default { createPatient, listPatients, getPatientById, updatePatient, updatePatientState, bulkImport };

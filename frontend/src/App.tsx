@@ -6,6 +6,9 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminPatients from './pages/AdminPatients';
+import AdminImport from './pages/AdminImport';
+import AdminUsers from './pages/AdminUsers';
 import MedicoDashboard from './pages/MedicoDashboard';
 import SolicitarRegistro from './pages/SolicitarRegistro';
 import Profile from './pages/Profile';
@@ -36,6 +39,9 @@ const App = () => {
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/patient" element={<RoleRoute allowed={['PACIENTE','patient']}><PatientDashboard /></RoleRoute>} />
             <Route path="/admin" element={<RoleRoute allowed={['ADMINISTRADOR','admin']}><AdminDashboard /></RoleRoute>} />
+            <Route path="/admin/usuarios" element={<RoleRoute allowed={['ADMINISTRADOR','admin']}><AdminUsers /></RoleRoute>} />
+            <Route path="/admin/pacientes" element={<RoleRoute allowed={['ADMINISTRADOR','admin']}><AdminPatients /></RoleRoute>} />
+            <Route path="/admin/carga" element={<RoleRoute allowed={['ADMINISTRADOR','admin']}><AdminImport /></RoleRoute>} />
             <Route path="/medico" element={<RoleRoute allowed={['MEDICO','medico']}><MedicoDashboard /></RoleRoute>} />
           </Routes>
         </main>

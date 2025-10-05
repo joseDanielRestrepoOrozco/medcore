@@ -1,0 +1,16 @@
+email,fullname,role,current_password,status,specialization,department,license_number,phone,date_of_birth
+medico1@medcore.com,Dr. Sofía González Ramírez,MEDICO,Cambio2025!,PENDING,Medicina Interna,Ginecología,MD-876646,+57 322 189 7912,1970-06-05
+medico2@medcore.com,Dra. Ana María Rodríguez Castro,MEDICO,Cambio2025!,PENDING,Ortopedia,Consulta Externa,MD-850800,+57 322 529 4611,1989-02-24
+miguel.ramirez.gonzalez.medico3@medcore.com,Dr. Miguel Ramírez González,MEDICO,Cambio2025!,PENDING,Ginecología,Hospitalización,MD-391369,+57 305 320 6514,1973-08-02
+laura.martinez.rodriguez.medico4@medcore.com,Dr. Laura Martínez Rodríguez,MEDICO,Cambio2025!,PENDING,Cardiología,Imágenes Diagnósticas,MD-145561,+57 319 649 3045,1985-12-24
+laura.garcia.ramirez.medico5@medcore.com,Dra. Laura García Ramírez,MEDICO,Cambio2025!,PENDING,Cardiología,Pediatría,MD-301629,+57 302 146 4733,1981-12-25
+laura.castro.rodriguez.enf1@medcore.com,Laura Castro Rodríguez,ENFERMERA,Cambio2025!,PENDING,,UCI,ENF-766563,+57 316 266 7065,1990-12-08
+daniela.ramirez.rodriguez.enf2@medcore.com,Daniela Ramírez Rodríguez,ENFERMERA,Cambio2025!,PENDING,,Consulta Externa,ENF-660086,+57 312 267 8573,1992-01-08
+juliana.garcia.castro.enf3@medcore.com,Juliana García Castro,ENFERMERA,Cambio2025!,PENDING,,Imágenes Diagnósticas,ENF-905635,+57 301 334 1525,1989-02-24
+enf4@medcore.com,Andrés Ramírez Rodríguez,ENFERMERA,Cambio2025!,PENDING,,Pediatría,ENF-852787,+57 315 317 9179,1992-09-30
+enf5@medcore.com,Sebastián Méndez Ramírez,ENFERMERA,Cambio2025!,PENDING,,Ginecología,ENF-688637,+57 322 369 8019,1992-11-30
+carlos.castro.mendez.paciente1@medcore.com,Carlos Castro Méndez,PACIENTE,Cambio2025!,PENDING,,,,+57 302 873 1771,1964-11-01
+valentina.mendez.martinez.paciente2@medcore.com,Valentina Méndez Martínez,PACIENTE,Cambio2025!,PENDING,,,,+57 317 490 8668,2002-06-21
+juliana.garcia.gonzalez.paciente3@medcore.com,Juliana García González,PACIENTE,Cambio2025!,PENDING,,,,+57 304 798 9797,1978-12-09
+juan.rodriguez.ramirez.paciente4@medcore.com,Juan Rodríguez Ramírez,PACIENTE,Cambio2025!,PENDING,,,,+57 319 103 5315,1999-11-29
+camila.garcia.rodriguez.paciente5@medcore.com,Camila García Rodríguez,PACIENTE,Cambio2025!,PENDING,,,,+57 314 961 9317,1972-11-04

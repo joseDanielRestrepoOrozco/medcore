@@ -132,6 +132,7 @@ const login = async (
         userId: user.id,
         email: user.email,
         fullname: user.fullname,
+        role: user.role,
       },
       SECRET,
       { expiresIn: '24h' }
