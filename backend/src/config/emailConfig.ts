@@ -1,5 +1,13 @@
 import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
-import { SMTP_PASS, SMTP_USER, SMTP_HOST, SMTP_PORT, SMTP_SECURE, EMAIL_ENABLED } from '../libs/config';
+import {
+  SMTP_PASS,
+  SMTP_USER,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_SECURE,
+  EMAIL_ENABLED,
+  NODE_ENV,
+} from '../libs/config';
 
 interface MailResult {
   success: boolean;
@@ -11,25 +19,17 @@ interface MailResult {
 const normalizedPass = (SMTP_PASS || '').replace(/\s+/g, '');
 
 // Prefer explicit host/port if provided; fallback to Gmail service
-const transporter: Transporter = nodemailer.createTransport(
-  SMTP_HOST
-    ? {
-        host: SMTP_HOST,
-        port: SMTP_PORT ? Number(SMTP_PORT) : 587,
-        secure: String(SMTP_SECURE).toLowerCase() === 'true',
-        auth: {
-          user: SMTP_USER,
-          pass: normalizedPass,
-        },
-      }
-    : {
-        service: 'gmail',
-        auth: {
-          user: SMTP_USER,
-          pass: normalizedPass,
-        },
-      }
-);
+const transporter: Transporter = nodemailer.createTransport({
+  service: NODE_ENV === 'production' ? 'gmail' : undefined,
+
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+
+  auth: {
+    user: SMTP_USER,
+    pass: normalizedPass,
+  },
+});
 
 let transporterVerified = false;
 
@@ -44,11 +44,20 @@ const sendVerificationEmail = async (
   verificationCode: string
 ): Promise<MailResult> => {
   console.log('[emailConfig] EMAIL_ENABLED=', String(EMAIL_ENABLED));
-  console.log('[emailConfig] transport mode=', SMTP_HOST ? `host=${SMTP_HOST} port=${SMTP_PORT} secure=${SMTP_SECURE}` : 'gmail service');
+  console.log(
+    '[emailConfig] transport mode=',
+    SMTP_HOST
+      ? `host=${SMTP_HOST} port=${SMTP_PORT} secure=${SMTP_SECURE}`
+      : 'gmail service'
+  );
   console.log('[emailConfig] SMTP_USER set=', Boolean(SMTP_USER));
   if (String(EMAIL_ENABLED).toLowerCase() === 'false') {
-    console.warn('[emailConfig] EMAIL_ENABLED=false — omitiendo envío de correo.');
-    console.log(`[DEV] Código de verificación para ${email}: ${verificationCode}`);
+    console.warn(
+      '[emailConfig] EMAIL_ENABLED=false — omitiendo envío de correo.'
+    );
+    console.log(
+      `[DEV] Código de verificación para ${email}: ${verificationCode}`
+    );
     return { success: true };
   }
 
@@ -69,6 +78,7 @@ const sendVerificationEmail = async (
     to: email,
     subject: 'MedCore | Verifica tu correo para activar tu cuenta',
     html: `
+    <!-- VERIFICATION_CODE:${verificationCode} -->
     <div style="max-width:640px;margin:0 auto;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#f6f9fc;color:#0f172a">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
         <tr>

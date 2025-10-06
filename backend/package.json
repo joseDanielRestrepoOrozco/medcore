@@ -11,6 +11,7 @@
     "dev": "ts-node-dev src/index.ts",
     "test:dev": "dotenv -e .env.test ts-node-dev src/index.ts",
     "test": "dotenv -e .env.test vitest --config ./vitest.config.ts",
+    "test:ui": "dotenv -e .env.test vitest --config ./vitest.config.ts --ui",
     "verify:types": "node ./tools/check-types.js",
     "tsc": "tsc",
     "lint": "eslint --ext .ts ."

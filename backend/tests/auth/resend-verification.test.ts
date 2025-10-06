@@ -28,7 +28,10 @@ describe('Resend Verification Code', () => {
     // Verificar que se envió un nuevo email
     const email = await getLastEmail();
     expect(email).toBeTruthy();
-    const verificationCode = email.Content.Body.match(/\d{6}/);
+    const match = email.Content.Body.match(
+      /<!--\s*VERIFICATION_CODE:(\d{6})\s*-->/
+    );
+    const verificationCode = match ? match[1] : null;
     expect(verificationCode).toBeTruthy();
   });
 

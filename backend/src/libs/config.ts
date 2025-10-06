@@ -13,3 +13,4 @@ export const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 export const NODE_ENV = process.env.NODE_ENV;
 export const TEST_EMAIL = process.env.TEST_EMAIL;
 export const MAILHOG_URL = process.env.MAILHOG_URL;
+export const EMAIL_ENABLED = process.env.EMAIL_ENABLED;

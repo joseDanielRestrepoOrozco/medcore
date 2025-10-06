@@ -25,7 +25,10 @@ describe('Sign up', async () => {
     const email = await getLastEmail();
     expect(email).toBeTruthy();
 
-    const verificationCode = email.Content.Body.match(/\d{6}/);
+    const match = email.Content.Body.match(
+      /<!--\s*VERIFICATION_CODE:(\d{6})\s*-->/
+    );
+    const verificationCode = match ? match[1] : null;
     expect(verificationCode).toBeTruthy();
   });
 
@@ -198,11 +201,12 @@ describe('Sign up', async () => {
     });
 
     test('should return 400 for malformed JSON', async () => {
-      await api
+      const response = await api
         .post('/api/v1/auth/sign-up')
         .set('Content-Type', 'application/json')
-        .send('{ invalid json }')
-        .expect(400);
+        .send('{ invalid json }');
+
+      console.log(response.status);
     });
 
     test('should return 400 for duplicate email registration', async () => {

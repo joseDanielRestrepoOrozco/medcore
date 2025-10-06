@@ -16,7 +16,10 @@ describe('Login', () => {
 
     // Obtener código y verificar usuario
     const email = await getLastEmail();
-    const verificationCode = email.Content.Body.match(/\d{6}/)?.[0];
+    const match = email.Content.Body.match(
+      /<!--\s*VERIFICATION_CODE:(\d{6})\s*-->/
+    );
+    const verificationCode = match ? match[1] : null;
 
     await api.post('/api/v1/auth/verify-email').send({
       email: TEST_EMAIL,
@@ -25,10 +28,13 @@ describe('Login', () => {
   });
 
   test('should login with correct credentials', async () => {
-    const response = await api.post('/api/v1/auth/log-in').send({
-      email: TEST_EMAIL,
-      currentPassword: '123456',
-    });
+    const response = await api
+      .post('/api/v1/auth/log-in')
+      .send({
+        email: TEST_EMAIL,
+        currentPassword: '123456',
+      })
+      .expect(200);
 
     expect(response.body.token).toBeTruthy();
     expect(response.body.user).toBeTruthy();

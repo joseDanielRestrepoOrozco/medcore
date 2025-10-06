@@ -18,7 +18,10 @@ describe('Email Verification', () => {
   test('should verify email with correct code', async () => {
     // Obtener el código del email
     const email = await getLastEmail();
-    const verificationCode = email.Content.Body.match(/\d{6}/)?.[0];
+    const match = email.Content.Body.match(
+      /<!--\s*VERIFICATION_CODE:(\d{6})\s*-->/
+    );
+    const verificationCode = match ? match[1] : null;
 
     const response = await api
       .post('/api/v1/auth/verify-email')
