@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 const currentPassword = z
   .string()
-  .min(1)
-  .max(6)
+  .min(6, { message: 'Debe tener al menos 6 caracteres' })
   .refine(val => /\d/.test(val), {
     message: 'Debe contener al menos un número',
   });

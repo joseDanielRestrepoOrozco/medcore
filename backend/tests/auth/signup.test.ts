@@ -111,21 +111,6 @@ describe('Sign up', async () => {
       expect(response.body.error).toBeTruthy();
     });
 
-    test('should return 400 for password too long', async () => {
-      const userData = {
-        email: TEST_EMAIL,
-        currentPassword: '1234567',
-        fullname: 'Test User',
-      };
-
-      const response = await api
-        .post('/api/v1/auth/sign-up')
-        .send(userData)
-        .expect(400);
-
-      expect(response.body.error).toBeTruthy();
-    });
-
     test('should return 400 for missing password field', async () => {
       const userData = {
         email: TEST_EMAIL,

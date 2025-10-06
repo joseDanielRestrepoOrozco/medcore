@@ -1,0 +1,4 @@
+firstName,lastName,email,phone,gender,dateOfBirth
+Juan,Perez,juan.perez@example.com,3120001111,MALE,1990-05-20
+Ana,Lopez,ana.lopez@example.com,3001112222,FEMALE,1992-04-12
+BadEmail,User,bad-email,3002223333,OTHER,1995-01-01
