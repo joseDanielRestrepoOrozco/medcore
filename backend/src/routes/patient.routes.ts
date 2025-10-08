@@ -3,6 +3,7 @@ import patientController from '../controllers/patient.controller';
 import tokenExtractor from '../middlewares/tokenExtractor';
 import { requireRoles } from '../middlewares/requireRoles';
 import { upload } from '../middlewares/upload';
+import patientBulkController from '../controllers/patientBulk.controller';
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ router.post(
   '/bulk-import',
   requireRoles('ADMINISTRADOR'),
   upload.single('file'),
-  patientController.bulkImportCsv
+  patientBulkController.bulkImportPatients
 );
 
 export default router;

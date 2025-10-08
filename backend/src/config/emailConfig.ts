@@ -4,8 +4,6 @@ import {
   SMTP_USER,
   SMTP_HOST,
   SMTP_PORT,
-  SMTP_SECURE,
-  EMAIL_ENABLED,
   NODE_ENV,
 } from '../libs/config';
 
@@ -20,7 +18,7 @@ const normalizedPass = (SMTP_PASS || '').replace(/\s+/g, '');
 
 // Prefer explicit host/port if provided; fallback to Gmail service
 const transporter: Transporter = nodemailer.createTransport({
-  service: NODE_ENV === 'production' ? 'gmail' : undefined,
+  service: NODE_ENV === 'test' ? undefined : 'gmail',
 
   host: SMTP_HOST,
   port: SMTP_PORT,
@@ -43,24 +41,8 @@ const sendVerificationEmail = async (
   fullname: string,
   verificationCode: string
 ): Promise<MailResult> => {
-  console.log('[emailConfig] EMAIL_ENABLED=', String(EMAIL_ENABLED));
-  console.log(
-    '[emailConfig] transport mode=',
-    SMTP_HOST
-      ? `host=${SMTP_HOST} port=${SMTP_PORT} secure=${SMTP_SECURE}`
-      : 'gmail service'
-  );
-  console.log('[emailConfig] SMTP_USER set=', Boolean(SMTP_USER));
-  if (String(EMAIL_ENABLED).toLowerCase() === 'false') {
-    console.warn(
-      '[emailConfig] EMAIL_ENABLED=false — omitiendo envío de correo.'
-    );
-    console.log(
-      `[DEV] Código de verificación para ${email}: ${verificationCode}`
-    );
-    return { success: true };
-  }
 
+  // verificar credenciales
   try {
     if (!transporterVerified) {
       await transporter.verify();
