@@ -35,12 +35,12 @@ model Patient {
   id                      String    @id @default(auto()) @map("_id") @db.ObjectId
   firstName               String
   lastName                String
-  email                   String?   @unique
+  email                   String    @unique
   phone                   String?
   gender                  String?
   dateOfBirth             DateTime
   age                     Int
-  state                   String    @default("ACTIVO")
+  state                   String    @default("PENDING")
   verificationCode        String?
   verificationCodeExpires DateTime?
   createdAt               DateTime  @default(now())

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma, Patient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import {
   patientCreateSchema,
@@ -6,7 +6,6 @@ import {
   patientStateSchema,
 } from '../schemas/Patient';
 import emailConfig from '../config/emailConfig';
-import { parseBuffer } from '../utils/parseFile';
 
 const prisma = new PrismaClient();
 
@@ -40,7 +39,7 @@ const createPatient = async (
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        email: data.email || null,
+        email: data.email,
         phone: data.phone || null,
         gender: data.gender || null,
         dateOfBirth: dob,
@@ -92,17 +91,15 @@ const listPatients = async (
       prisma.patient.count({ where }),
     ]);
 
-    res
-      .status(200)
-      .json({
-        patients,
-        pagination: {
-          total,
-          page: Number(page),
-          limit: Number(limit),
-          totalPages: Math.ceil(total / Number(limit)),
-        },
-      });
+    res.status(200).json({
+      patients,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+      },
+    });
   } catch (error: unknown) {
     next(error);
   }
@@ -181,158 +178,10 @@ const updatePatientState = async (
   }
 };
 
-// Bulk import (JSON payload) — espera { patients: Array<Record<string,string>> }
-export const bulkImportJson = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const patients = (req.body?.patients || []) as Array<
-      Record<string, string>
-    >;
-    if (!Array.isArray(patients) || patients.length === 0) {
-      res.status(400).json({ error: 'Sin datos para importar' });
-      return;
-    }
-    const results = {
-      successful: 0,
-      failed: 0,
-      errors: [] as Array<{ index: number; error: string }>,
-    };
-    for (let i = 0; i < patients.length; i++) {
-      const row = patients[i];
-      try {
-        // map keys: firstName,lastName,email,phone,gender,dateOfBirth
-        const payload = {
-          firstName: row.firstName || row.nombre || row.first_name,
-          lastName: row.lastName || row.apellido || row.last_name,
-          email: row.email || row.correo || undefined,
-          phone: row.phone || row.telefono || undefined,
-          gender: (row.gender || row.genero || '').toUpperCase() || undefined,
-          dateOfBirth:
-            row.dateOfBirth || row.fecha_nacimiento || row.fechaNacimiento,
-        };
-        patientCreateSchema.parse(payload);
-        const dob = new Date(String(payload.dateOfBirth));
-        const age = calculateAge(dob);
-        await prisma.patient.create({
-          data: {
-            firstName: String(payload.firstName),
-            lastName: String(payload.lastName),
-            email: payload.email || null,
-            phone: payload.phone || null,
-            gender: payload.gender || null,
-            dateOfBirth: dob,
-            age,
-          },
-        });
-        results.successful++;
-      } catch (e: any) {
-        results.failed++;
-        results.errors.push({ index: i, error: e?.message || 'Error' });
-      }
-    }
-    res
-      .status(200)
-      .json({ message: 'Importación completada', summary: results });
-  } catch (error: unknown) {
-    next(error);
-  }
-};
-
-async function bulkImportCsv(req: Request, res: Response, next: NextFunction) {
-  try {
-    const file = req.file as Express.Multer.File | undefined;
-    if (!file) {
-      res.status(400).json({ error: 'Archivo requerido' });
-      return;
-    }
-
-    const rows = parseBuffer(file.buffer, file.originalname);
-
-    const results = {
-      successful: [] as Array<{ index: number; patient: Patient }>,
-      failed: [] as Array<{
-        index: number;
-        row: Record<string, unknown>;
-        error: string;
-      }>,
-      total: rows.length,
-    };
-
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      try {
-        const data = patientCreateSchema.parse(row);
-
-        // calcular dob y edad
-        const dob = new Date(data.dateOfBirth);
-        const age = Math.floor(
-          (Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-        );
-
-        const verificationCode =
-          emailConfig.generateVerificationCode?.() ||
-          Math.random().toString(36).slice(2, 8).toUpperCase();
-        const verificationCodeExpires = new Date();
-        verificationCodeExpires.setHours(
-          verificationCodeExpires.getHours() + 24
-        );
-
-        const patient = await prisma.patient.create({
-          data: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email || null,
-            phone: data.phone || null,
-            gender: data.gender || null,
-            dateOfBirth: dob,
-            age,
-            verificationCode,
-            verificationCodeExpires,
-          },
-        });
-
-        try {
-          await emailConfig.sendVerificationEmail?.(
-            patient.email || '',
-            `${patient.firstName} ${patient.lastName}`,
-            verificationCode
-          );
-        } catch (e) {
-          console.warn('Could not send verification email for bulk patient', e);
-        }
-
-        results.successful.push({ index: i, patient });
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        results.failed.push({ index: i, row, error: message });
-      }
-    }
-
-    res
-      .status(200)
-      .json({
-        message: 'Importación completada',
-        summary: {
-          total: results.total,
-          successful: results.successful.length,
-          failed: results.failed.length,
-        },
-        results,
-      });
-  } catch (error: unknown) {
-    next(error);
-  }
-}
-
 export default {
   createPatient,
   listPatients,
   getPatientById,
   updatePatient,
   updatePatientState,
-  bulkImportCsv,
-  bulkImportJson,
 };

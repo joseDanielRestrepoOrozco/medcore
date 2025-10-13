@@ -20,7 +20,10 @@ const signup = async (
 ): Promise<void> => {
   try {
     const newUser = signupSchema.parse(req.body);
-    console.log('[signup] request', { email: newUser.email, fullname: newUser.fullname });
+    console.log('[signup] request', {
+      email: newUser.email,
+      fullname: newUser.fullname,
+    });
 
     // Evitar leer campos con tipos inválidos en documentos antiguos
     const userExist = await prisma.users.findUnique({
@@ -50,7 +53,10 @@ const signup = async (
         verificationCodeExpires,
       },
     });
-    console.log('[signup] user created', { id: createUser.id, email: createUser.email });
+    console.log('[signup] user created', {
+      id: createUser.id,
+      email: createUser.email,
+    });
 
     console.log('[signup] sending verification email...');
     const emailResult = await emailConfig.sendVerificationEmail(
@@ -74,7 +80,7 @@ const signup = async (
       email: createUser.email,
       fullname: createUser.fullname,
       status: createUser.status,
-      message: 'Usuario creado. Código enviado al correo.'
+      message: 'Usuario creado. Código enviado al correo.',
     });
   } catch (error: unknown) {
     console.error('[signup] unhandled error', error);

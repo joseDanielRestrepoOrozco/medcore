@@ -33,7 +33,7 @@ const transporter: Transporter = nodemailer.createTransport({
 
 let transporterVerified = false;
 
-const generateVerificationCode = (): string => {
+export const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
