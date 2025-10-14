@@ -2,13 +2,11 @@ import { NextFunction, Request, Response } from 'express';
 import { PrismaClient, Patient } from '@prisma/client';
 import emailConfig, { generateVerificationCode } from '../config/emailConfig';
 import { parseBuffer } from '../utils/parseFile';
-import { patientCreateSchema } from '../schemas/Patient';
+import { patientCreateSchema, validateAge } from '../schemas/Patient';
 import z from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
-
-const validateAge = z.number().min(0).max(100);
 
 async function bulkImportPatients(
   req: Request,

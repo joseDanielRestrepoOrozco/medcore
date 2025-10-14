@@ -1,19 +1,15 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import {
   patientCreateSchema,
   patientUpdateSchema,
   patientStateSchema,
+  validateAge,
 } from '../schemas/Patient';
 import emailConfig from '../config/emailConfig';
+import calculateAge from '../utils/calcAge';
 
 const prisma = new PrismaClient();
-
-function calculateAge(dob: Date): number {
-  const diff = Date.now() - dob.getTime();
-  const ageDt = new Date(diff);
-  return Math.abs(ageDt.getUTCFullYear() - 1970);
-}
 
 const createPatient = async (
   req: Request,
@@ -22,12 +18,8 @@ const createPatient = async (
 ): Promise<void> => {
   try {
     const data = patientCreateSchema.parse(req.body);
-    const dob = new Date(data.dateOfBirth);
-    const age = calculateAge(dob);
-    if (age < 0 || age > 100) {
-      res.status(400).json({ error: 'Edad fuera de rango permitido (0-100)' });
-      return;
-    }
+    const age = calculateAge(data.dateOfBirth);
+    validateAge.parse(age);
 
     const verificationCode =
       emailConfig.generateVerificationCode?.() ||
@@ -37,12 +29,7 @@ const createPatient = async (
 
     const patient = await prisma.patient.create({
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone || null,
-        gender: data.gender || null,
-        dateOfBirth: dob,
+        ...data,
         age,
         verificationCode,
         verificationCodeExpires,
@@ -131,27 +118,19 @@ const updatePatient = async (
   try {
     const { id } = req.params;
     const data = patientUpdateSchema.parse(req.body);
-
-    const updateData: Prisma.PatientUpdateInput = {
-      ...data,
-    } as unknown as Prisma.PatientUpdateInput;
+    let age: number | undefined = undefined;
     if (data.dateOfBirth) {
-      const dob = new Date(data.dateOfBirth as string);
-      updateData.dateOfBirth = dob;
-      const age = calculateAge(dob);
-      if (age < 0 || age > 100) {
-        res
-          .status(400)
-          .json({ error: 'Edad fuera de rango permitido (0-100)' });
-        return;
-      }
-      updateData.age = age;
+      age = calculateAge(data.dateOfBirth);
+      validateAge.parse(age);
     }
 
     // Use Prisma types for update data
     const updated = await prisma.patient.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...data,
+        age,
+      },
     });
     res.status(200).json({ message: 'Paciente actualizado', patient: updated });
   } catch (error: unknown) {

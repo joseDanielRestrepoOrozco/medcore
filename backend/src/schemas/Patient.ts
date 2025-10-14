@@ -34,6 +34,8 @@ export const patientUpdateSchema = z.object({
     }),
 });
 
+export const validateAge = z.number().min(0).max(100);
+
 export const patientStateSchema = z.object({
   state: z.enum(['ACTIVO', 'INACTIVO']),
 });
