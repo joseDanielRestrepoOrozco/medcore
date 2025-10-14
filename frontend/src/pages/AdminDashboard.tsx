@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const displayName = user?.fullname || user?.email || 'Juan Pérez';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [usersActive, setUsersActive] = useState<number>(0);

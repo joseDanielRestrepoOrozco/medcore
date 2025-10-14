@@ -3,7 +3,7 @@ import SignUp from './pages/SignUp';
 import VerifyEmail from './pages/VerifyEmail';
 import Login from './pages/Login';
 import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
+// import Dashboard from './pages/Dashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminPatients from './pages/AdminPatients';
