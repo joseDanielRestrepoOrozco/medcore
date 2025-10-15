@@ -1,20 +1,20 @@
 import api from './api';
 
 // Payload types
-export type SignUpPayload = { fullname: string; email: string; currentPassword: string };
-export type LoginPayload = { email: string; currentPassword: string };
+export type SignUpPayload = { fullname: string; email: string; current_password: string };
+export type LoginPayload = { email: string; current_password: string };
 export type VerifyEmailPayload = { email: string; verificationCode: string };
 export type ResendVerificationPayload = { email: string };
 
 // Response types
 export type AuthUser = {
-  id: string | number;
+  id: string;
   email: string;
   fullname: string;
   status: string;
   // roles según backend (ES):
   // 'ADMINISTRADOR' | 'MEDICO' | 'PACIENTE' | 'ENFERMERA'
-  role?: string;
+  role: string;
 };
 
 export type SignUpResponse = {
