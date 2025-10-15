@@ -3,21 +3,18 @@ import tseslint from 'typescript-eslint'
 import stylistic from '@stylistic/eslint-plugin'
 
 export default tseslint.config({
-  extends: [
-    eslint.configs.recommended,
-    tseslint.configs.recommended
-  ],
+  extends: [eslint.configs.recommended, tseslint.configs.recommended],
   plugins: {
     js: eslint,
     '@typescript-eslint': tseslint.plugin,
-    '@stylistic': stylistic
+    '@stylistic': stylistic,
   },
   languageOptions: {
     parser: tseslint.parser,
     parserOptions: {
       projectService: true,
-      tsconfigRootDir: import.meta.dirname
-    }
+      tsconfigRootDir: import.meta.dirname,
+    },
   },
   rules: {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -26,7 +23,7 @@ export default tseslint.config({
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/restrict-plus-operands': 'off',
-    '@typescript-eslint/no-case-declarations': 'off'
+    '@typescript-eslint/no-case-declarations': 'off',
   },
-  ignores: ['dist/**/*', 'eslint.config.mjs', 'tests/**/*' ]
+  ignores: ['dist/**/*', 'eslint.config.mjs', 'vitest.config.ts', 'tools/**/*'],
 })
