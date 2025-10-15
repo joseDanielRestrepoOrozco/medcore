@@ -5,7 +5,7 @@ type User = {
   email?: string;
   fullname?: string;
   status?: string;
-  role?: 'admin' | 'patient' | 'medico';
+  role: string;
 };
 
 type AuthContextValue = {
@@ -17,8 +17,12 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem('token')
+  );
   const [user, setUser] = useState<User | null>(() => {
     try {
       const raw = localStorage.getItem('user');

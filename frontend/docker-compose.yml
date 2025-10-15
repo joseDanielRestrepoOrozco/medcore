@@ -4,70 +4,68 @@ services:
   # 1. Servicio para el frontend (React)
   frontend:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile
-    container_name: frontend-service
+      
+    container_name: medcore-frontend
+    image: medcore-frontend
     ports:
-      - "80:80"
-    depends_on:
-      - backend
-    networks:
-      - app-network
+      - "8080:80"
 
   # 2. Servicio para el backend (Node.js)
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend-service
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=CHANGE
-      - MONGODB_URI=CHANGE
-    depends_on:
-      - db-postgres
-      - db-mongodb
-    networks:
-      - app-network
+#   backend:
+#     build:
+#       context: ./backend
+#       dockerfile: Dockerfile
+#     container_name: backend-service
+#     restart: always
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - DATABASE_URL=CHANGE
+#       - MONGODB_URI=CHANGE
+#     depends_on:
+#       - db-postgres
+#       - db-mongodb
+#     networks:
+#       - app-network
 
-  # 3. Servicio para la base de datos PostgreSQL
-  db-postgres:
-    image: postgres:13-alpine
-    container_name: postgres-db
-    restart: always
-    environment:
-      - POSTGRES_USER=CHANGE
-      - POSTGRES_PASSWORD=CHANGE
-      - POSTGRES_DB=medcore_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - app-network
+#   # 3. Servicio para la base de datos PostgreSQL
+#   db-postgres:
+#     image: postgres:13-alpine
+#     container_name: postgres-db
+#     restart: always
+#     environment:
+#       - POSTGRES_USER=CHANGE
+#       - POSTGRES_PASSWORD=CHANGE
+#       - POSTGRES_DB=medcore_db
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres-data:/var/lib/postgresql/data
+#     networks:
+#       - app-network
 
-  # 4. Servicio para la base de datos MongoDB
-  db-mongodb:
-    image: mongo:latest
-    container_name: mongodb-db
-    restart: always
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=CHANGE
-      - MONGO_INITDB_ROOT_PASSWORD=CHANGE
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb-data:/data/db
-    networks:
-      - app-network
+#   # 4. Servicio para la base de datos MongoDB
+#   db-mongodb:
+#     image: mongo:latest
+#     container_name: mongodb-db
+#     restart: always
+#     environment:
+#       - MONGO_INITDB_ROOT_USERNAME=CHANGE
+#       - MONGO_INITDB_ROOT_PASSWORD=CHANGE
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongodb-data:/data/db
+#     networks:
+#       - app-network
 
-# 5. Definición de redes y volúmenes
-networks:
-  app-network:
-    driver: bridge
+# # 5. Definición de redes y volúmenes
+# networks:
+#   app-network:
+#     driver: bridge
 
-volumes:
-  postgres-data:
-  mongodb-data:
+# volumes:
+#   postgres-data:
+#   mongodb-data:

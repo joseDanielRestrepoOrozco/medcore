@@ -2,28 +2,11 @@ services:
   # Servicio para el backend de Node.js
   backend:
     build:
-      context: ./backend # Ruta a la carpeta de tu backend
+      context: . # Ruta a la carpeta de tu backend
       dockerfile: Dockerfile
-    container_name: backend-service
-    restart: always
+    container_name: medcore-backend
+    image: medcore-backend
     ports:
       - "3000:3000" # Mapea el puerto 3000 de tu máquina al puerto del contenedor
-    environment:
-      # Variables de entorno para la conexión a las bases de datos
-      - DATABASE_URL=
-      - MONGODB_URI=
-    depends_on:
-      - db-postgres # Asegura que PostgreSQL se inicie primero
-      - db-mongodb # Asegura que MongoDB se inicie primero
-    networks:
-      - app-network
-  # Servicio de servidor de correo MailHog para pruebas
-  mailhog:
-    container_name: docker_mailhog
-    image: mailhog/mailhog:latest
-    logging:
-      driver: none # disable saving logs
-    ports:
-      - "1025:1025" # smtp server
-      - "8025:8025" # web ui
-# ... (El resto del docker-compose.yml con los otros servicios) ...
+    env_file:
+      - .env

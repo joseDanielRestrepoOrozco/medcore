@@ -9,8 +9,10 @@ describe('Email', () => {
   test('User Registration - Successful Registration and Email Sent', async () => {
     const userData = {
       email: TEST_EMAIL,
-      currentPassword: '123456',
+      current_password: '123456',
       fullname: 'Test User',
+      date_of_birth: '2004-06-04',
+      role: 'ADMINISTRADOR',
     };
 
     const response = await api

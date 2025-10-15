@@ -1,4 +1,4 @@
-import { MAILHOG_URL } from '../src/libs/config';
+import { MAILHOG_URL } from '../src/libs/config.js';
 import { EmailHug } from '../src/types/MailHug';
 
 const getLastEmail = async (): Promise<EmailHug> => {

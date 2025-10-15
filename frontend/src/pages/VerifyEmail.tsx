@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { verifyEmail, resendVerificationCode } from '../services/auth';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '../utils/error';

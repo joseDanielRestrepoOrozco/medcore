@@ -13,34 +13,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Users {
-  id                      String    @id @default(auto()) @map("_id") @db.ObjectId
-  email                   String    @unique
-  fullname                String
-  currentPassword         String
-  role                    String    @default("ADMINISTRADOR") // MEDICO, ENFERMERA, PACIENTE, ADMINISTRADOR
-  status                  String    @default("PENDING")
-  specialization          String? // Especialización médica (solo para médicos)
-  department              String? // Departamento donde trabaja
-  licenseNumber           String? // Número de licencia médica
-  phone                   String? // Teléfono de contacto
-  dateOfBirth             DateTime? // Fecha de nacimiento
-  verificationCode        String?
-  verificationCodeExpires DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+enum Role {
+  MEDICO
+  ENFERMERA
+  PACIENTE
+  ADMINISTRADOR
 }
 
-model Patient {
-  id                      String    @id @default(auto()) @map("_id") @db.ObjectId
-  firstName               String
-  lastName                String
-  email                   String?   @unique
-  phone                   String?
-  gender                  String?
-  dateOfBirth             DateTime
-  age                     Int
-  state                   String    @default("ACTIVO")
+model Users {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  email            String   @unique
+  fullname         String
+  current_password String
+  status           String   @default("PENDING")
+  phone            String? // Teléfono de contacto
+  date_of_birth    DateTime
+  gender           String?
+  age              Int
+  role             Role     @default(PACIENTE) // MEDICO, ENFERMERA, PACIENTE, ADMINISTRADOR
+  // campos para doctores
+  specialization   String? // Especialización médica (solo para médicos)
+  department       String? // Departamento donde trabaja
+  license_number   String? // Número de licencia médica
+
+  // campos para verificación de email
   verificationCode        String?
   verificationCodeExpires DateTime?
   createdAt               DateTime  @default(now())

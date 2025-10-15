@@ -1,12 +1,20 @@
 import { NextFunction, Request, Response } from 'express';
-import { PrismaClient, Patient } from '@prisma/client';
-import emailConfig from '../config/emailConfig';
+import { PrismaClient, Users } from '@prisma/client';
+import emailConfig, { generateVerificationCode } from '../config/emailConfig';
 import { parseBuffer } from '../utils/parseFile';
-import { patientCreateSchema } from '../schemas/Patient';
+import z from 'zod';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { userSchema, validateAge } from '../schemas/Auth';
+import calculateAge from '../utils/calcAge';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function bulkImportPatients(req: Request, res: Response, next: NextFunction) {
+async function bulkImportPatients(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const file = req.file as Express.Multer.File | undefined;
     if (!file) {
@@ -17,52 +25,93 @@ async function bulkImportPatients(req: Request, res: Response, next: NextFunctio
     const rows = parseBuffer(file.buffer, file.originalname);
 
     const results = {
-      successful: [] as Array<{ index: number; patient: Patient }>,
-      failed: [] as Array<{ index: number; row: Record<string, unknown>; error: string }>,
-      total: rows.length
+      successful: [] as Array<{ index: number; patient: Users }>,
+      failed: [] as Array<{
+        index: number;
+        row: Record<string, unknown>;
+        error: string;
+      }>,
+      total: rows.length,
     };
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       try {
-        const data = patientCreateSchema.parse(row);
+        const data = userSchema.parse(row);
 
         // calcular dob y edad
-        const dob = new Date(data.dateOfBirth);
-        const age = Math.floor((Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+        const age = calculateAge(data.date_of_birth);
 
-        const verificationCode = emailConfig.generateVerificationCode?.() || Math.random().toString(36).slice(2, 8).toUpperCase();
+        validateAge.parse(age);
+
+        const verificationCode = generateVerificationCode();
         const verificationCodeExpires = new Date();
-        verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 24);
+        verificationCodeExpires.setHours(
+          verificationCodeExpires.getHours() + 24
+        );
 
-        const patient = await prisma.patient.create({
+        const patient = await prisma.users.create({
           data: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email || null,
-            phone: data.phone || null,
-            gender: data.gender || null,
-            dateOfBirth: dob,
+            ...data,
+            current_password: await bcrypt.hash(data.current_password, 10),
             age,
+            date_of_birth: new Date(data.date_of_birth),
             verificationCode,
             verificationCodeExpires,
-          }
+          },
         });
 
         try {
-          await emailConfig.sendVerificationEmail?.(patient.email || '', `${patient.firstName} ${patient.lastName}`, verificationCode);
+          await emailConfig.sendVerificationEmail?.(
+            patient.email,
+            `${patient.fullname}`,
+            verificationCode
+          );
         } catch (e) {
+          await prisma.users.delete({
+            where: { id: patient.id },
+          });
           console.warn('Could not send verification email for bulk patient', e);
         }
 
         results.successful.push({ index: i, patient });
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        results.failed.push({ index: i, row, error: message });
+        if (err instanceof z.ZodError) {
+          const flattened = z.flattenError(err);
+          const allErrors = [
+            ...flattened.formErrors,
+            ...Object.values(flattened.fieldErrors).flat(),
+          ];
+          results.failed.push({
+            index: i,
+            row,
+            error: allErrors.join('; '),
+          });
+        } else if (
+          err instanceof PrismaClientKnownRequestError &&
+          err.code === 'P2002'
+        ) {
+          results.failed.push({
+            index: i,
+            row,
+            error: 'Conflicto de clave única',
+          });
+        } else {
+          const message = err instanceof Error ? err.message : String(err);
+          results.failed.push({ index: i, row, error: message });
+        }
       }
     }
 
-    res.status(200).json({ message: 'Importación completada', summary: { total: results.total, successful: results.successful.length, failed: results.failed.length }, results });
+    res.status(200).json({
+      message: 'Importación completada',
+      summary: {
+        total: results.total,
+        successful: results.successful.length,
+        failed: results.failed.length,
+      },
+      results,
+    });
   } catch (error: unknown) {
     next(error);
   }

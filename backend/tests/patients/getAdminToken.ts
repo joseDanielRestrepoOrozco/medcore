@@ -6,8 +6,11 @@ import { api } from '../auth/setup';
 export async function getAdminToken() {
   const adminData = {
     email: `admin+${Date.now()}@mail.com`,
-    currentPassword: 'admin123',
+    current_password: 'admin123',
     fullname: 'Admin Test',
+    phone: '573001112223',
+    date_of_birth: '2004-06-04',
+    role: 'ADMINISTRADOR',
   };
   // Registro
   await api.post('/api/v1/auth/sign-up').send(adminData).expect(201);
@@ -30,7 +33,7 @@ export async function getAdminToken() {
     .post('/api/v1/auth/log-in')
     .send({
       email: adminData.email,
-      currentPassword: adminData.currentPassword,
+      current_password: adminData.current_password,
     })
     .expect(200);
   return loginRes.body.token;

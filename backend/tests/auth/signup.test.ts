@@ -12,6 +12,8 @@ describe('Sign up', async () => {
       email: TEST_EMAIL,
       currentPassword: '123456',
       fullname: 'Test User',
+      date_of_birth: '2004-06-04',
+      role: 'ADMINISTRADOR',
     };
 
     const response = await api.post('/api/v1/auth/sign-up').send(userData);

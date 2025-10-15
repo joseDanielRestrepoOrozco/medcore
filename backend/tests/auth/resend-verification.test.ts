@@ -12,6 +12,8 @@ describe('Resend Verification Code', () => {
       email: TEST_EMAIL,
       currentPassword: '123456',
       fullname: 'Test User',
+      date_of_birth: '2004-06-04',
+      role: 'ADMINISTRADOR',
     });
   });
 

@@ -10,8 +10,10 @@ describe('Login', () => {
     // Crear y verificar un usuario para las pruebas de login
     await api.post('/api/v1/auth/sign-up').send({
       email: TEST_EMAIL,
-      currentPassword: '123456',
+      current_password: '123456',
       fullname: 'Test User',
+      date_of_birth: '2004-06-04',
+      role: 'ADMINISTRADOR',
     });
 
     // Obtener código y verificar usuario

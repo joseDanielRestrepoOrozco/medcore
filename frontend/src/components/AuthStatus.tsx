@@ -22,10 +22,10 @@ const AuthStatus = () => {
 
   const displayName = user?.fullname || user?.email || 'Usuario';
 
-  const rawRole = (user as typeof user & { role?: string })?.role || '';
-  const role = rawRole.toUpperCase();
-  const dashboardHref =
-    role === 'ADMINISTRADOR' ? '/admin' : role === 'PACIENTE' ? '/patient' : role === 'MEDICO' ? '/medico' : '/dashboard';
+  // const rawRole = (user as typeof user & { role?: string })?.role || '';
+  // const role = rawRole.toUpperCase();
+  // const dashboardHref =
+  //   role === 'ADMINISTRADOR' ? '/admin' : role === 'PACIENTE' ? '/patient' : role === 'MEDICO' ? '/medico' : '/dashboard';
 
   return (
     <div className="flex items-center space-x-3">

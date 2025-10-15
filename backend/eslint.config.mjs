@@ -28,5 +28,5 @@ export default tseslint.config({
     '@typescript-eslint/restrict-plus-operands': 'off',
     '@typescript-eslint/no-case-declarations': 'off'
   },
-  ignores: ['dist/**/*', 'eslint.config.mjs']
+  ignores: ['dist/**/*', 'eslint.config.mjs', 'tests/**/*' ]
 })

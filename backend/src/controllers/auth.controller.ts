@@ -4,12 +4,14 @@ import jwt from 'jsonwebtoken';
 import emailConfig from '../config/emailConfig';
 import { NextFunction, Request, Response } from 'express';
 import {
-  signupSchema,
+  userSchema,
   loginSchema,
   verifyEmailSchema,
   resendVerificationCodeSchema,
+  validateAge,
 } from '../schemas/Auth';
 import { SECRET } from '../libs/config';
+import calculateAge from '../utils/calcAge';
 
 const prisma = new PrismaClient();
 
@@ -19,8 +21,11 @@ const signup = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const newUser = signupSchema.parse(req.body);
-    console.log('[signup] request', { email: newUser.email, fullname: newUser.fullname });
+    const newUser = userSchema.parse(req.body);
+    console.log('[signup] request', {
+      email: newUser.email,
+      fullname: newUser.fullname,
+    });
 
     // Evitar leer campos con tipos inválidos en documentos antiguos
     const userExist = await prisma.users.findUnique({
@@ -34,6 +39,9 @@ const signup = async (
       return;
     }
 
+    const age = calculateAge(newUser.date_of_birth);
+    validateAge.parse(age);
+
     const verificationCode = emailConfig.generateVerificationCode();
 
     const verificationCodeExpires = new Date();
@@ -43,14 +51,18 @@ const signup = async (
 
     const createUser = await prisma.users.create({
       data: {
-        email: newUser.email,
-        currentPassword: await bcrypt.hash(newUser.currentPassword, 10),
-        fullname: newUser.fullname,
+        ...newUser,
+        age,
+        date_of_birth: new Date(newUser.date_of_birth),
+        current_password: await bcrypt.hash(newUser.current_password, 10),
         verificationCode,
         verificationCodeExpires,
       },
     });
-    console.log('[signup] user created', { id: createUser.id, email: createUser.email });
+    console.log('[signup] user created', {
+      id: createUser.id,
+      email: createUser.email,
+    });
 
     console.log('[signup] sending verification email...');
     const emailResult = await emailConfig.sendVerificationEmail(
@@ -74,7 +86,8 @@ const signup = async (
       email: createUser.email,
       fullname: createUser.fullname,
       status: createUser.status,
-      message: 'Usuario creado. Código enviado al correo.'
+      role: createUser.role,
+      message: 'Usuario creado. Código enviado al correo.',
     });
   } catch (error: unknown) {
     console.error('[signup] unhandled error', error);
@@ -98,7 +111,7 @@ const login = async (
         fullname: true,
         status: true,
         role: true,
-        currentPassword: true,
+        current_password: true,
       },
     });
 
@@ -107,14 +120,14 @@ const login = async (
       return;
     }
 
-    if (user.status !== 'VERIFIED') {
+    if (user.status !== 'ACTIVE') {
       res.status(401).json({ error: 'Email no verificado. Revisa tu correo.' });
       return;
     }
 
     const passwordMatch = await bcrypt.compare(
-      loginData.currentPassword,
-      user.currentPassword
+      loginData.current_password,
+      user.current_password
     );
 
     if (!passwordMatch) {
@@ -179,7 +192,7 @@ const verifyEmail = async (
       return;
     }
 
-    if (user.status === 'VERIFIED') {
+    if (user.status === 'ACTIVE') {
       res.status(400).json({ error: 'Usuario ya verificado' });
       return;
     }
@@ -200,7 +213,7 @@ const verifyEmail = async (
     const updatedUser = await prisma.users.update({
       where: { id: user.id },
       data: {
-        status: 'VERIFIED',
+        status: 'ACTIVE',
         verificationCode: null,
         verificationCodeExpires: null,
       },
@@ -243,7 +256,7 @@ const resendVerificationCode = async (
       return;
     }
 
-    if (user.status === 'VERIFIED') {
+    if (user.status === 'ACTIVE') {
       res.status(400).json({ error: 'Usuario ya verificado' });
       return;
     }
