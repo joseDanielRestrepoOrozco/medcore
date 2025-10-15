@@ -11,26 +11,26 @@ beforeAll(async () => {
   adminToken = await getAdminToken();
   // Crear paciente para pruebas de GET
   const patientData = {
-    firstName: 'Ana',
-    lastName: 'García',
+    fullname: 'Ana Garcia',
     email: `ana.garcia+${Date.now()}@mail.com`,
-    phone: '+573001234568',
+    date_of_birth: '1985-08-20',
+    current_password: 'patient123',
+    phone: '573001234568',
     gender: 'FEMALE',
-    dateOfBirth: '1985-08-20',
   };
   const res = await api
     .post('/api/v1/patients')
-    .set('Authorization', `Bearer ${adminToken}`)
+    .auth(adminToken, { type: 'bearer' })
     .send(patientData)
     .expect(201);
   createdPatientId = res.body.patient.id;
 });
 
-describe('GET /api/v1/patients/:id', () => {
+describe.only('GET /api/v1/patients/:id', () => {
   test('Devuelve un paciente existente', async () => {
     const res = await api
       .get(`/api/v1/patients/${createdPatientId}`)
-      .set('Authorization', `Bearer ${adminToken}`)
+      .auth(adminToken, { type: 'bearer' })
       .expect(200);
     expect(res.body.patient).toBeTruthy();
     expect(res.body.patient.id).toBe(createdPatientId);
@@ -39,7 +39,7 @@ describe('GET /api/v1/patients/:id', () => {
   test('Devuelve 404 si el paciente no existe', async () => {
     const res = await api
       .get('/api/v1/patients/000000000000000000000000')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `${adminToken}`)
       .expect(404);
     expect(res.body.error).toMatch(/no encontrado/i);
   });

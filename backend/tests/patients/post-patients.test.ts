@@ -13,20 +13,23 @@ beforeAll(async () => {
 describe('POST /api/v1/patients', () => {
   test('Crea un paciente correctamente', async () => {
     const patientData = {
-      firstName: 'Juan',
-      lastName: 'Pérez',
+      fullname: 'Juan Pérez',
       email: `juan.perez+${Date.now()}@mail.com`,
-      phone: '+573001234567',
+      phone: '573001234567',
       gender: 'MALE',
-      dateOfBirth: '1990-05-10',
+      current_password: 'patient123',
+      date_of_birth: '1990-05-10',
     };
     const res = await api
       .post('/api/v1/patients')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `${adminToken}`)
       .send(patientData)
       .expect(201);
     expect(res.body.patient).toBeTruthy();
-    expect(res.body.patient.firstName).toBe(patientData.firstName);
-    expect(res.body.patient.lastName).toBe(patientData.lastName);
+    expect(res.body.patient.fullname).toBe(patientData.fullname);
+    expect(res.body.patient.email).toBe(patientData.email);
+    expect(res.body.patient.phone).toBe(patientData.phone);
+    expect(res.body.patient.gender).toBe(patientData.gender);
+    expect(res.body.patient.date_of_birth).toBe(patientData.date_of_birth);
   });
 });

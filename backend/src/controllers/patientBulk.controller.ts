@@ -1,10 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
-import { PrismaClient, Patient } from '@prisma/client';
+import { PrismaClient, Users } from '@prisma/client';
 import emailConfig, { generateVerificationCode } from '../config/emailConfig';
 import { parseBuffer } from '../utils/parseFile';
-import { patientCreateSchema, validateAge } from '../schemas/Patient';
 import z from 'zod';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { userSchema, validateAge } from '../schemas/Auth';
+import calculateAge from '../utils/calcAge';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -23,7 +25,7 @@ async function bulkImportPatients(
     const rows = parseBuffer(file.buffer, file.originalname);
 
     const results = {
-      successful: [] as Array<{ index: number; patient: Patient }>,
+      successful: [] as Array<{ index: number; patient: Users }>,
       failed: [] as Array<{
         index: number;
         row: Record<string, unknown>;
@@ -35,15 +37,12 @@ async function bulkImportPatients(
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       try {
-        const data = patientCreateSchema.parse(row);
+        const data = userSchema.parse(row);
 
         // calcular dob y edad
-        const dob = new Date(data.dateOfBirth);
-        const age = Math.floor(
-          (Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-        );
+        const age = calculateAge(data.date_of_birth);
 
-        const verifiedAge = validateAge.parse(age);
+        validateAge.parse(age);
 
         const verificationCode = generateVerificationCode();
         const verificationCodeExpires = new Date();
@@ -51,15 +50,12 @@ async function bulkImportPatients(
           verificationCodeExpires.getHours() + 24
         );
 
-        const patient = await prisma.patient.create({
+        const patient = await prisma.users.create({
           data: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone || null,
-            gender: data.gender || null,
-            dateOfBirth: dob,
-            age: verifiedAge,
+            ...data,
+            current_password: await bcrypt.hash(data.current_password, 10),
+            age,
+            date_of_birth: new Date(data.date_of_birth),
             verificationCode,
             verificationCodeExpires,
           },
@@ -68,11 +64,11 @@ async function bulkImportPatients(
         try {
           await emailConfig.sendVerificationEmail?.(
             patient.email,
-            `${patient.firstName} ${patient.lastName}`,
+            `${patient.fullname}`,
             verificationCode
           );
         } catch (e) {
-          await prisma.patient.delete({
+          await prisma.users.delete({
             where: { id: patient.id },
           });
           console.warn('Could not send verification email for bulk patient', e);
