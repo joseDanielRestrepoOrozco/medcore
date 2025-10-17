@@ -20,25 +20,97 @@ enum Role {
   ADMINISTRADOR
 }
 
-model Users {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  email            String   @unique
-  fullname         String
-  current_password String
-  status           String   @default("PENDING")
-  phone            String? // Teléfono de contacto
-  date_of_birth    DateTime
-  gender           String?
-  age              Int
-  role             Role     @default(PACIENTE) // MEDICO, ENFERMERA, PACIENTE, ADMINISTRADOR
-  // campos para doctores
-  specialization   String? // Especialización médica (solo para médicos)
-  department       String? // Departamento donde trabaja
-  license_number   String? // Número de licencia médica
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
 
-  // campos para verificación de email
+enum State {
+  ACTIVE
+  INACTIVE
+}
+
+enum DiagnosisState {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+model Users {
+  id                      String       @id @default(auto()) @map("_id") @db.ObjectId
+  email                   String       @unique
+  current_password        String
+  fullname                String
+  role                    Role         @default(PACIENTE) // MEDICO, ENFERMERA, PACIENTE, 
+  specialization          String? // Especialización médica (solo para médicos)
+  department              String? // Departamento (solo para enfermeras)
+  license_number          String? // Número de licencia médica (solo para médicos)
+  date_of_birth           DateTime
+  age                     Int
+  phone                   String? // Teléfono de contacto
+  status                  UserStatus   @default(PENDING)
   verificationCode        String?
   verificationCodeExpires DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  patient                 Patient?
+  diagnosticsCreated      Diagnostic[] @relation("DoctorDiagnostics")
+}
+
+model Patient {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String       @unique @db.ObjectId
+  documentNumber String       @unique
+  gender         String
+  address        String?
+  state          State        @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  diagnostics    Diagnostic[]
+}
+
+model Diagnostic {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  patientId       String         @db.ObjectId
+  doctorId        String         @db.ObjectId
+  title           String
+  description     String
+  symptoms        String
+  diagnosis       String
+  treatment       String
+  observations    String?
+  diagnosticDate  DateTime       @default(now())
+  nextAppointment DateTime?
+  state           DiagnosisState @default(ACTIVE) // ACTIVE, ARCHIVED, DELETED
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // relations
+  patient   Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    Users                @relation("DoctorDiagnostics", fields: [doctorId], references: [id])
+  documents DiagnosticDocument[]
+
+  @@index([patientId])
+  @@index([doctorId])
+}
+
+model DiagnosticDocument {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  diagnosticId   String   @db.ObjectId
+  filename       String
+  storedFilename String
+  filePath       String
+  fileType       String
+  mimeType       String
+  fileSize       Int
+  description    String?
+  uploadedBy     String   @db.ObjectId
+  createdAt      DateTime @default(now())
+
+  // relations
+  diagnostic Diagnostic @relation(fields: [diagnosticId], references: [id], onDelete: Cascade)
+
+  @@index([diagnosticId])
 }

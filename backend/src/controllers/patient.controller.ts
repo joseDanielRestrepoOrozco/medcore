@@ -1,15 +1,46 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, State } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
-import emailConfig from '../config/emailConfig';
-import calculateAge from '../utils/calcAge';
+import { DiagnosticData } from '../schemas/DiagnosticData';
+import DiagnosticService from '../services/diagnostic.service';
 import {
+  PatientSchema,
   patientStateSchema,
-  patientWithoutRoleSchema,
-  validateAge,
-} from '../schemas/Auth';
-import bcrypt from 'bcrypt';
+  UpdatePatientSchema,
+} from '../schemas/Patient';
 
 const prisma = new PrismaClient();
+
+const createDiagnostic = async (req: Request, res: Response) => {
+  try {
+
+    console.log('Archivos recibidos:', req.files);
+    const { patientId } = req.params;
+    const doctorId = req.user?.id as string;
+    const files = req.files as Express.Multer.File[];
+
+    const diagnosticData = DiagnosticData.parse(req.body);
+
+    const diagnostic = await DiagnosticService.createDiagnostic(
+      patientId,
+      doctorId,
+      diagnosticData,
+      files
+    );
+
+    res.status(201).json({
+      message: 'Diagnóstico creado exitosamente',
+      data: diagnostic,
+    });
+    return;
+  } catch (error) {
+    console.error('Error creando diagnóstico:', error);
+    if (error instanceof Error) {
+      res
+        .status(400)
+        .json({ message: error.message || 'Error al crear diagnostico' });
+    }
+  }
+};
 
 const createPatient = async (
   req: Request,
@@ -17,53 +48,16 @@ const createPatient = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const data = patientWithoutRoleSchema.parse(req.body);
-    const age = calculateAge(data.date_of_birth);
-    validateAge.parse(age);
+    const data = PatientSchema.parse(req.body);
 
-    const verificationCode =
-      emailConfig.generateVerificationCode?.() ||
-      Math.random().toString(36).slice(2, 8).toUpperCase();
-    const verificationCodeExpires = new Date();
-    verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 24);
-
-    const patient = await prisma.users.create({
-      data: {
-        ...data,
-        role: Role.PACIENTE,
-        date_of_birth: new Date(data.date_of_birth),
-        age,
-        current_password: await bcrypt.hash(data.current_password, 10),
-        verificationCode,
-        verificationCodeExpires,
-      },
+    const patient = await prisma.patient.create({
+      data,
     });
 
-    try {
-      await emailConfig.sendVerificationEmail?.(
-        patient.email,
-        `${patient.fullname}`,
-        verificationCode
-      );
-    } catch (e) {
-      console.warn('Warning: could not send verification email', e);
-    }
-
-    res
-      .status(201)
-      .json({
-        message: 'Paciente creado',
-        patient: {
-          id: patient.id,
-          email: patient.email,
-          fullname: patient.fullname,
-          date_of_birth: patient.date_of_birth,
-          age: patient.age,
-          status: patient.status,
-          phone: patient.phone,
-          gender: patient.gender,
-        },
-      });
+    res.status(201).json({
+      message: 'Paciente creado',
+      patient,
+    });
   } catch (error: unknown) {
     next(error);
   }
@@ -75,33 +69,35 @@ const listPatients = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const {
-      page = '1',
-      limit = '10',
-      state,
-    } = req.query as Record<string, string>;
-    const where: Record<string, unknown> = { role: Role.PACIENTE };
-    if (state) where.state = state;
+    // Parseo de parámetros de consulta
+    const { state } = req.query;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
 
-    const skip = (Number(page) - 1) * Number(limit);
+    // Validar y convertir el valor de state al tipo correcto
+    const where: { state?: State } = {};
+    if (state === State.ACTIVE || state === State.INACTIVE) {
+      where.state = state as State;
+    }
 
     const [patients, total] = await Promise.all([
-      prisma.users.findMany({
+      prisma.patient.findMany({
         where,
         skip,
-        take: Number(limit),
+        take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.users.count({ where }),
+      prisma.patient.count({ where }),
     ]);
 
     res.status(200).json({
       patients,
       pagination: {
         total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error: unknown) {
@@ -116,12 +112,8 @@ const getPatientById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const patient = await prisma.users.findUnique({ where: { id } });
+    const patient = await prisma.patient.findUnique({ where: { id } });
 
-    if (!patient || patient.role !== Role.PACIENTE) {
-      res.status(404).json({ error: 'Paciente no encontrado' });
-      return;
-    }
     res.status(200).json({ patient });
   } catch (error: unknown) {
     next(error);
@@ -135,19 +127,11 @@ const updatePatient = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const data = patientWithoutRoleSchema.parse(req.body);
-    const age = calculateAge(data.date_of_birth);
-    validateAge.parse(age);
-
+    const data = UpdatePatientSchema.parse(req.body);
     // Use Prisma types for update data
-    const updated = await prisma.users.update({
-      where: { id, role: Role.PACIENTE },
-      data: {
-        ...data,
-        date_of_birth: new Date(data.date_of_birth),
-        age,
-        current_password: await bcrypt.hash(data.current_password, 10),
-      },
+    const updated = await prisma.patient.update({
+      where: { id },
+      data,
     });
 
     res.status(200).json({ message: 'Paciente actualizado', patient: updated });
@@ -163,11 +147,11 @@ const updatePatientState = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { status } = patientStateSchema.parse(req.body);
+    const { state } = patientStateSchema.parse(req.body);
 
-    const updated = await prisma.users.update({
+    const updated = await prisma.patient.update({
       where: { id },
-      data: { status },
+      data: { state },
     });
     res.status(200).json({ message: 'Estado actualizado', patient: updated });
   } catch (error: unknown) {
@@ -181,4 +165,5 @@ export default {
   getPatientById,
   updatePatient,
   updatePatientState,
+  createDiagnostic,
 };

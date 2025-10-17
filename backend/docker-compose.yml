@@ -5,6 +5,8 @@ services:
       context: . # Ruta a la carpeta de tu backend
       dockerfile: Dockerfile
     container_name: medcore-backend
+    environment:
+      - FRONTEND_ORIGIN=http://localhost:8080
     image: medcore-backend
     ports:
       - "3000:3000" # Mapea el puerto 3000 de tu máquina al puerto del contenedor
