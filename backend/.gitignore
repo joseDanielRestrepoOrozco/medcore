@@ -5,3 +5,9 @@ node_modules
 .env.development
 
 /generated/prisma
+
+uploads/
+
+bulks_example
+examples
+img

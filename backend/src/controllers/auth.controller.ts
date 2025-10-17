@@ -21,13 +21,13 @@ const signup = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const newUser = userSchema.parse(req.body);
+    const bodyWhitRole = { role: req.body.role || 'PACIENTE', ...req.body };
+    const newUser = userSchema.parse(bodyWhitRole);
     console.log('[signup] request', {
       email: newUser.email,
       fullname: newUser.fullname,
     });
 
-    // Evitar leer campos con tipos inválidos en documentos antiguos
     const userExist = await prisma.users.findUnique({
       where: { email: newUser.email },
       select: { id: true },
@@ -294,4 +294,9 @@ const resendVerificationCode = async (
   }
 };
 
-export default { signup, login, verifyEmail, resendVerificationCode };
+export default {
+  signup,
+  login,
+  verifyEmail,
+  resendVerificationCode,
+};

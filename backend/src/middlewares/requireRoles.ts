@@ -9,17 +9,31 @@ export function requireRoles(...roles: string[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = await prisma.users.findUnique({
       where: { id: req.tokenPayload?.userId },
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        role: true,
+        specialization: true,
+        date_of_birth: true,
+        age: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      }
     });
 
     if (!user) {
-      res.status(401).json({ error: 'Usuario no encontrado' });
+      res.status(404).json({ error: 'Usuario no encontrado' });
       return;
     }
 
     if (!user.role || !allowed.includes(user.role)) {
-      res.status(403).json({ error: 'Acceso denegado' });
+      res.status(401).json({ error: 'Acceso denegado' });
       return;
     }
+
+    req.user = user;
     next();
   };
 }
