@@ -1,5 +1,4 @@
 import express from 'express';
-import './types/express';
 import cors from 'cors';
 import router from './routes/routes';
 import unknownEndpoint from './middlewares/unknownEndpoint';
@@ -17,7 +16,6 @@ app.use(
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/v1', router);
-
 
 app.use(unknownEndpoint);
 app.use(errorHandler);

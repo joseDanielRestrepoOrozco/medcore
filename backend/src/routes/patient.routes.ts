@@ -2,9 +2,9 @@ import express from 'express';
 import patientController from '../controllers/patient.controller';
 import tokenExtractor from '../middlewares/tokenExtractor';
 import { requireRoles } from '../middlewares/requireRoles';
-import { upload } from '../middlewares/upload';
 import patientBulkController from '../controllers/patientBulk.controller';
-import multer from '../config/multer';
+import csvUploadMiddleware from '../middlewares/upload/csvUpload.middleware';
+import { diagnosticUpload } from '../middlewares/upload/diagnosticUpload.middleware';
 
 const router = express.Router();
 
@@ -17,6 +17,7 @@ router.get(
   requireRoles('ADMINISTRADOR', 'MEDICO', 'ENFERMERA'),
   patientController.listPatients
 );
+
 router.get(
   '/:id',
   requireRoles('ADMINISTRADOR', 'MEDICO', 'ENFERMERA'),
@@ -27,7 +28,7 @@ router.get(
 router.post(
   '/:patientId/diagnostics',
   requireRoles('MEDICO'),
-  multer.uploadMultiple,
+  diagnosticUpload.multiple,
   patientController.createDiagnostic
 );
 
@@ -51,7 +52,7 @@ router.patch(
 router.post(
   '/bulk-import',
   requireRoles('ADMINISTRADOR'),
-  upload.single('file'),
+  csvUploadMiddleware.uploadSingle,
   patientBulkController.bulkImportPatients
 );
 

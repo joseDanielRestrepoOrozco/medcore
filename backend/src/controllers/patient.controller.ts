@@ -12,8 +12,6 @@ const prisma = new PrismaClient();
 
 const createDiagnostic = async (req: Request, res: Response) => {
   try {
-
-    console.log('Archivos recibidos:', req.files);
     const { patientId } = req.params;
     const doctorId = req.user?.id as string;
     const files = req.files as Express.Multer.File[];
