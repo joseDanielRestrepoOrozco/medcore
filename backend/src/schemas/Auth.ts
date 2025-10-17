@@ -45,14 +45,8 @@ export const pacienteSchema = baseUser.extend({
   role: z.literal(roleEnumSchema.enum.PACIENTE),
 });
 
-export const patientWithoutRoleSchema = pacienteSchema.omit({ role: true });
-
 export const administradorSchema = baseUser.extend({
   role: z.literal(roleEnumSchema.enum.ADMINISTRADOR),
-});
-
-export const patientStateSchema = z.object({
-  status: z.enum(['ACTIVE', 'INACTIVE']),
 });
 
 export const userSchema = z.discriminatedUnion('role', [
